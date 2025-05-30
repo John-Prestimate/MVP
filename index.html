@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Estimate Drawing Tool (OpenLayers)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.3.0/ol.css">
+  <style>
+    #map { height: 600px; width: 100%; }
+    #controls, #instructions { margin: 10px 0; }
+    #addressInput, #serviceSelect, #heightSelect {
+      margin: 5px 0;
+      padding: 5px;
+      width: 100%;
+      max-width: 400px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="instructions">
+  <strong>Instructions:</strong><br>
+  🟢 Trace the shape of your <strong>Driveway, Deck, or Patio</strong><br>
+  🔵 Use lines for <strong>House siding and Fences</strong>, double click to end line<br>
+  🔁 Use "Reset Map" to start over.
+</div>
+
+<input id="addressInput" type="text" placeholder="Enter address...">
+<select id="serviceSelect" onchange="updateHeightOptions()">
+  <option value="house">House</option>
+  <option value="driveway">Driveway</option>
+  <option value="deck">Deck</option>
+  <option value="fence">Fence</option>
+  <option value="patio">Patio</option>
+</select>
+<select id="heightSelect" style="display:none;"></select>
+
+<div id="controls">
+  <button onclick="resetMap()">Reset Map</button><br>
+  <strong>Total Estimate:</strong> <span id="estimate">$0.00</span><br>
+  <a href="https://reviveprowashkc.com/contact-page-2/" target="_blank" id="quote-button" style="display: none; margin-top: 8px; padding: 6px 12px; background-color: #007BFF; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
+    Get a Quote
+  </a>
+</div>
+
+<div id="map"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/ol@v7.3.0/dist/ol.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+  const PRICES = {
+    house: 0.25,
+    fence: 0.25,
+    driveway: 0.20,
+    deck: 0.20,
+    patio: 0.20
+  };
+
+  const supabaseUrl = 'https://kmmkfdoyehmjnxfbisxo.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttbWtmZG95ZWhtam54ZmJpc3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0ODk3MzMsImV4cCI6MjA2NDA2NTczM30.50cLLw7muIHarMgkbQsD-Sg0M5hqL20mY5p3Do55SHY';
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+  const projectId = crypto.randomUUID();
+  let totalEstimate = 0;
+  let map, draw, source;
+
+  source = new ol.source.Vector();
+  const vectorLayer = new ol.layer.Vector({ source });
+
+  map = new ol.Map({
+    target: 'map',
+    layers: [
+      new ol.layer.Tile({
+        source: new ol.source.XYZ({
+          url: 'https://api.maptiler.com/maps/satellite/256/{z}/{x}/{y}.jpg?key=33WqaD71YQyANT8jMxRO'
+        })
+      }),
+      vectorLayer
+    ],
+    view: new ol.View({
+      center: ol.proj.fromLonLat([-94.5786, 39.0997]),
+      zoom: 15
+    })
+  });
+
+  function addInteraction(type) {
+    draw = new ol.interaction.Draw({ source: source, type: type });
+
+    draw.on('drawend', async function (event) {
+      const geometry = event.feature.getGeometry();
+      const service = document.getElementById("serviceSelect").value;
+      const rate = PRICES[service];
+      const address = document.getElementById("addressInput").value;
+
+      let estimate = 0;
+      let units = "";
+      let measurement = 0;
+      let height = 10;
+
+      const heightVal = document.getElementById("heightSelect").value;
+
+      if (geometry instanceof ol.geom.Polygon && ['driveway', 'deck', 'patio'].includes(service)) {
+        const area = ol.sphere.getArea(geometry);
+        measurement = area * 10.7639;
+        estimate = measurement * rate;
+        units = `${measurement.toFixed(1)} sq ft`;
+
+      } else if (geometry instanceof ol.geom.LineString && ['house', 'fence'].includes(service)) {
+        const length = ol.sphere.getLength(geometry);
+        const lengthFeet = length * 3.28084;
+
+        if (service === 'house') {
+          height = parseInt(heightVal || "1") * 10;
+        } else if (service === 'fence') {
+          height = parseInt(heightVal || "6");
+        }
+
+        measurement = lengthFeet * height;
+        estimate = measurement * rate;
+        units = `${measurement.toFixed(1)} sq ft`;
+
+      } else {
+        alert("Tool does not match service type.");
+        return;
+      }
+
+      totalEstimate += estimate;
+      document.getElementById("estimate").innerText = `$${totalEstimate.toFixed(2)} (${units})`;
+      document.getElementById("quote-button").style.display = "inline-block";
+
+      // Save to Supabase
+      await saveEstimate({
+        projectId,
+        address,
+        serviceType: service,
+        measurement: measurement.toFixed(2),
+        unit: 'sq ft',
+        estimatedCost: estimate.toFixed(2),
+        additionalData: { height, geometryType: geometry.getType() }
+      });
+
+      // Send Email via fetch to Formspree
+      emailEstimate(address, service, measurement.toFixed(2), estimate.toFixed(2));
+    });
+
+    map.addInteraction(draw);
+  }
+
+  function resetMap() {
+    source.clear();
+    totalEstimate = 0;
+    document.getElementById("estimate").innerText = "$0.00";
+    document.getElementById("quote-button").style.display = "none";
+    if (draw) map.removeInteraction(draw);
+    updateDrawingMode();
+  }
+
+  function updateDrawingMode() {
+    if (draw) map.removeInteraction(draw);
+    const service = document.getElementById("serviceSelect").value;
+    const type = ['driveway', 'deck', 'patio'].includes(service) ? 'Polygon' : 'LineString';
+    addInteraction(type);
+  }
+
+  function updateHeightOptions() {
+    const service = document.getElementById("serviceSelect").value;
+    const heightSelect = document.getElementById("heightSelect");
+    heightSelect.style.display = 'none';
+    heightSelect.innerHTML = '';
+
+    if (service === 'house') {
+      heightSelect.innerHTML = `
+        <option value="1">1 Story</option>
+        <option value="2">2 Stories</option>
+        <option value="3">3 Stories</option>`;
+      heightSelect.style.display = 'inline-block';
+    } else if (service === 'fence') {
+      heightSelect.innerHTML = `
+        <option value="4">4 ft</option>
+        <option value="6">6 ft</option>
+        <option value="8">8 ft</option>`;
+      heightSelect.style.display = 'inline-block';
+    }
+
+    updateDrawingMode();
+  }
+
+  async function saveEstimate({ projectId, address, serviceType, measurement, unit, estimatedCost, additionalData }) {
+  console.log("Saving estimate with data:", {
+    project_id: projectId,
+    address,
+    service_type: serviceType,
+    measurement: parseFloat(measurement),
+    unit: unit,
+    estimated_cost: parseFloat(estimatedCost),
+    additional_data: additionalData
+  });
+
+  const { data, error } = await supabaseClient.from('estimates').insert([{
+    project_id: projectId,
+    address: address,
+    service_type: serviceType,
+    measurement: parseFloat(measurement),
+    unit: unit,
+    estimated_cost: parseFloat(estimatedCost),
+    additional_data: additionalData
+  }]);
+
+  if (error) {
+    console.error('❌ Supabase insert error:', error.message, error.details);
+  } else {
+    console.log('✅ Estimate saved:', data);
+  }
+}
+
+
+
+  function emailEstimate(address, serviceType, measurement, cost) {
+    const formData = {
+      project_id: projectId,
+      address,
+      service_type: serviceType,
+      measurement,
+      estimated_cost: cost
+    };
+
+    fetch("https://formspree.io/f/mqabzklw", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(formData)
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Form submission failed");
+      }
+      console.log("Email sent via Formspree");
+    })
+    .catch(error => {
+      console.error("Formspree error:", error);
+    });
+  }
+
+  document.getElementById("serviceSelect").addEventListener("change", updateDrawingMode);
+  updateDrawingMode();
+
+  // Address autocomplete
+  document.getElementById('addressInput').addEventListener('change', async () => {
+    const query = encodeURIComponent(document.getElementById('addressInput').value);
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
+    const data = await res.json();
+    if (data.length > 0) {
+      const { lat, lon } = data[0];
+      map.getView().setCenter(ol.proj.fromLonLat([parseFloat(lon), parseFloat(lat)]));
+      map.getView().setZoom(18);
+    }
+  });
+</script>
+
+</body>
+</html>
