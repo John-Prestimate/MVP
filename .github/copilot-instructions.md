@@ -2,7 +2,7 @@
 
 - **Always read `PLANNING.md`** at the start of a new conversation to understand the project's architecture, goals, style, and constraints.
 
-- **Check `TASK.md`** before starting a new task. If the task isn’t listed, add it with a brief description and today's date.
+- **Check `TASKS.md`** before starting a new task. If the task isn’t listed, add it with a brief description and today's date.
 
 - **Use consistent naming conventions, file structure, and architecture patterns** as described in `PLANNING.md`.
 
@@ -35,7 +35,7 @@
 
 ### ✅ Task Completion
 
-- **Mark completed tasks in `TASK.md`** immediately after finishing them.
+- **Mark completed tasks in `TASKS.md`** immediately after finishing them.
 
 - Add new sub-tasks or TODOs discovered during development to `TASK.md` under a “Discovered During Work” section.
 
@@ -56,4 +56,4 @@
 
 - **Always confirm file paths and module names** exist before referencing them in code or tests.
 
-- **Never delete or overwrite existing code** unless explicitly instructed to or if part of a task from `TASK.md`.
+- **Never delete or overwrite existing code** unless explicitly instructed to or if part of a task from `TASKS.md`.
