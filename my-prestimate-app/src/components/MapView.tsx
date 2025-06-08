@@ -312,7 +312,7 @@ const MapView = () => {
       dataProjection: 'EPSG:4326',
       featureProjection: 'EPSG:3857',
     });
-    console.log('Buildings loaded:', features.length);
+    // Updated style: lighter blue, more transparent
     const vectorSource = new VectorSource({ features });
     if (buildingLayerRef.current) {
       buildingLayerRef.current.setSource(vectorSource);
@@ -320,8 +320,8 @@ const MapView = () => {
       const vectorLayer = new VectorLayer({
         source: vectorSource,
         style: new Style({
-          stroke: new Stroke({ color: '#00FFFF', width: 1 }),
-          fill: new Fill({ color: 'rgba(0,255,255,0.1)' }),
+          stroke: new Stroke({ color: 'rgba(0,191,255,0.5)', width: 1 }),
+          fill: new Fill({ color: 'rgba(0,191,255,0.04)' }),
         }),
       });
       buildingLayerRef.current = vectorLayer;
@@ -402,8 +402,8 @@ const MapView = () => {
       layers: [
         new TileLayer({
           source: new XYZ({
-            url: 'https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg?key=33WqaD71YQyANT8jMxRO',
-            tileSize: 512,
+            url: 'https://api.maptiler.com/maps/satellite/256/{z}/{x}/{y}.jpg?key=33WqaD71YQyANT8jMxRO',
+            // tileSize defaults to 256, so we omit it.
           }),
         }),
         drawingLayerRef.current,
