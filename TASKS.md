@@ -4,7 +4,8 @@
 - [ ] Enable Supabase Auth (email + password to start)
 - [ ] Create `users` table (if not auto-generated)
 - [ ] Associate estimates with `user_id`
-- [ ] Restrict `estimates` RLS to only show entries where `user_id = auth.uid()`
+- [x] Restrict `estimates` RLS to only show entries where `user_id = auth.uid()`
+  - ✅ Redundant command-specific RLS policies removed. Now using a single, simple ALL policy for user-based row access. (2025-06-09)
 
 ## 📊 Supabase: Data Structure
 - [x] Confirm `estimates` table structure
@@ -41,7 +42,8 @@
 
 ## 🧪 Testing
 - [ ] Create test Supabase users
-- [ ] Ensure RLS is secure and functional
+- [x] Ensure RLS is secure and functional
+  - ✅ RLS reviewed and redundant policies cleaned up for estimates table (2025-06-09)
 - [ ] Test multiple estimates saved by multiple users
 
 ## 📦 DevOps
