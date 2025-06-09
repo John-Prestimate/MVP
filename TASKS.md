@@ -23,7 +23,7 @@
   - Retrieve estimate history
 
 ## 🌐 Admin Dashboard (Phase 1 UI)
-- [ ] Build a simple dashboard UI (React or Supabase Studio)
+- [x] Build a simple dashboard UI (React or Supabase Studio)
 - [ ] Secure with Supabase Auth
 - [ ] Display:
   - Estimate history
@@ -65,3 +65,4 @@
 - Step-by-step RLS testing checklist provided and reviewed
 - Test users created and instructions for local multi-user testing explained
 - Formspree estimate delivery working
+- Basic Admin Dashboard UI is displaying
