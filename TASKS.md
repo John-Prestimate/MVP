@@ -14,7 +14,7 @@
   - `service_types` (JSON)
   - `currency`, `units`
   - `formspree_endpoint` (or email)
-- [ ] Add `projects` table for grouping estimates
+- [x] Add `projects` table for grouping estimates
 
 ## ⚙️ Backend Customization Engine
 - [ ] Create API or Supabase functions to:
