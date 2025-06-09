@@ -9,7 +9,7 @@
 
 ## 📊 Supabase: Data Structure
 - [x] Confirm `estimates` table structure
-- [ ] Add `business_settings` table:
+- [x] Add `business_settings` table:
   - `user_id`
   - `service_types` (JSON)
   - `currency`, `units`
