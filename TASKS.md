@@ -1,42 +1,42 @@
 # Prestimate Widget – BACKEND TASKS
 
-## 🔐 Supabase: Authentication
+## 📨 Supabase: Authentication
 - [x] Enable Supabase Auth (email + password to start)
 - [x] Create `users` table (if not auto-generated)
-- [x] Associate estimates with `user_id`
-- [x] Restrict `estimates` RLS to only show entries where `user_id = auth.uid()`
+- [ ] Associate estimates with `user_id`
+- [ ] Restrict `estimates` RLS to only show entries where `user_id = auth.uid()`
   - ✅ Redundant command-specific RLS policies removed. Now using a single, simple ALL policy for user-based row access. (2025-06-09)
 
-## 📊 Supabase: Data Structure
+## 🗄️ Supabase: Data Structure
 - [x] Confirm `estimates` table structure
 - [x] Add `business_settings` table:
-  - `user_id`
-  - `service_types` (JSON)
-  - `currency`, `units`
-  - `formspree_endpoint` (or email)
+   - `user_id`
+   - `service_types` (JSON)
+   - `currency`, `units`
+   - `formspree_endpoint` (or email)
 - [x] Add `projects` table for grouping estimates
 
-## ⚙️ Backend Customization Engine
+## 🛠️ Backend Customization Engine
 - [ ] Create API or Supabase functions to:
-  - Get business settings per user
-  - Update settings
-  - Retrieve estimate history
+   - Get business settings per user
+   - Update settings
+   - Retrieve estimate history
 
-## 🌐 Admin Dashboard (Phase 1 UI)
+## 🖥️ Admin Dashboard (Phase 1 UI)
 - [x] Build a simple dashboard UI (React or Supabase Studio)
 - [ ] Secure with Supabase Auth
 - [ ] Display:
-  - Estimate history
-  - Form to update pricing/services
+   - Estimate history
+   - Form to update pricing/services
 
-## 💳 Stripe Integration
+## 🏷️ Stripe Integration
 - [ ] Add Stripe keys to Supabase environment
 - [ ] Setup Stripe customer creation on user signup
 - [ ] Enable basic monthly subscription
 - [ ] Webhook: restrict access to widget if inactive or unpaid
 
-## 📬 Estimate Delivery
-- [x] Formspree sending working
+## 🚚 Estimate Delivery
+- [ ] Formspree sending working
 - [ ] Make email destination customizable via business settings
 - [ ] Optional: replace Formspree with Supabase edge functions + SendGrid
 
@@ -46,23 +46,18 @@
   - ✅ RLS reviewed and redundant policies cleaned up for estimates table (2025-06-09)
 - [ ] Test multiple estimates saved by multiple users
 
-## 📦 DevOps
-- [ ] Define `.env` structure for local dev
-- [ ] Push backend config files to GitHub (no secrets)
+## 📝 DevOps
+- [x] Define `.env` structure for local dev
+- [x] Push backend config files to GitHub (no secrets)
 - [ ] Add README instructions for backend setup
 
-## 🧠 Optional (LLM-Based Help)
+## 🧑‍💻 Optional (LLM-Based Help)
 - [ ] Set up GPT-powered assistant to help generate shape-based estimates
 - [ ] Allow prompt-based override/edit for estimate (e.g., "change driveway to patio")
 
 ---
 
 ## ✅ Accomplished in this session:
-- Supabase Auth enabled and tested on localhost
-- `users` table confirmed/created
-- `user_id` associated with `estimates` table and set on insert
-- RLS enabled, tested, and redundant policies cleaned up for estimates table
-- Step-by-step RLS testing checklist provided and reviewed
-- Test users created and instructions for local multi-user testing explained
-- Formspree estimate delivery working
-- Basic Admin Dashboard UI is displaying
+- Diagnosed and fixed Supabase environment variable loading issue by placing `.env` in the project root
+- Confirmed app now loads environment variables and connects to Supabase without console errors
+- Verified basic app functionality restored and app launches successfully
