@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "r
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
+import Profile from "./components/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function AppRoutes({ setSession }: { setSession: (s: any) => void }) {
@@ -18,6 +19,14 @@ function AppRoutes({ setSession }: { setSession: (s: any) => void }) {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         }
       />
