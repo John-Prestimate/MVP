@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 const Register = ({ onRegistered }: { onRegistered?: () => void }) => {
   const [email, setEmail] = useState("");
@@ -7,6 +8,7 @@ const Register = ({ onRegistered }: { onRegistered?: () => void }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +58,14 @@ const Register = ({ onRegistered }: { onRegistered?: () => void }) => {
       </form>
       {error && <div style={{ color: "red", marginTop: 14, textAlign: "center" }}>{error}</div>}
       {success && <div style={{ color: "green", marginTop: 14, textAlign: "center" }}>{success}</div>}
+      <div style={{ textAlign: "center", marginTop: 18 }}>
+        <button
+          onClick={() => navigate("/login")}
+          style={{ background: "none", color: "#0b80ff", border: "none", cursor: "pointer", textDecoration: "underline" }}
+        >
+          Back to Login
+        </button>
+      </div>
     </div>
   );
 };
