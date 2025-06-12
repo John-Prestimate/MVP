@@ -16,14 +16,26 @@ const Login = ({ onLogin }: { onLogin?: () => void }) => {
     setError(null);
     setInfo(null);
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error, data } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    console.log("Login response", { error, data });
+    console.log("Session:", data.session); 
     setLoading(false);
     if (error) {
       setError(error.message);
-    } else if (onLogin) {
-      onLogin();
+      setPassword("");
+    } else if (data?.session) {
+      alert("Login successful!"); // Optional: For debugging, remove if not needed
+      if (onLogin) {
+        onLogin();
+      } else {
+        // Force a hard redirect to /dashboard instead of navigate
+        window.location.href = "/dashboard";
+      }
     } else {
-      window.location.reload();
+      setError("Login failed. Please try again.");
     }
   };
 
@@ -32,7 +44,7 @@ const Login = ({ onLogin }: { onLogin?: () => void }) => {
     setError(null);
     setInfo(null);
     setMagicLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOtp({ email: email.trim() });
     setMagicLoading(false);
     if (error) {
       setError(error.message);
@@ -42,7 +54,14 @@ const Login = ({ onLogin }: { onLogin?: () => void }) => {
   };
 
   return (
-    <div style={{ maxWidth: 350, margin: "60px auto", padding: 24, border: "1px solid #e0e7ef", borderRadius: 8, background: "#fff" }}>
+    <div style={{
+      maxWidth: 350,
+      margin: "60px auto",
+      padding: 24,
+      border: "1px solid #e0e7ef",
+      borderRadius: 8,
+      background: "#fff"
+    }}>
       <h2>Login to Prestimate</h2>
       <form onSubmit={handleLogin}>
         <div style={{ marginBottom: 12 }}>
@@ -51,8 +70,10 @@ const Login = ({ onLogin }: { onLogin?: () => void }) => {
             required
             placeholder="Email"
             value={email}
+            autoComplete="username"
             onChange={e => setEmail(e.target.value)}
             style={{ width: "100%", padding: 8, fontSize: 16 }}
+            disabled={loading || magicLoading}
           />
         </div>
         <div style={{ marginBottom: 12 }}>
@@ -61,14 +82,25 @@ const Login = ({ onLogin }: { onLogin?: () => void }) => {
             required
             placeholder="Password"
             value={password}
+            autoComplete="current-password"
             onChange={e => setPassword(e.target.value)}
             style={{ width: "100%", padding: 8, fontSize: 16 }}
+            disabled={loading || magicLoading}
           />
         </div>
         <button
           type="submit"
-          disabled={loading || magicLoading}
-          style={{ width: "100%", padding: 10, fontSize: 16, background: "#0b80ff", color: "#fff", border: "none", borderRadius: 4 }}
+          disabled={loading || magicLoading || !email.trim() || !password}
+          style={{
+            width: "100%",
+            padding: 10,
+            fontSize: 16,
+            background: "#0b80ff",
+            color: "#fff",
+            border: "none",
+            borderRadius: 4,
+            cursor: loading || magicLoading ? "not-allowed" : "pointer"
+          }}
         >
           {loading ? "Logging in..." : "Login"}
         </button>
@@ -79,8 +111,17 @@ const Login = ({ onLogin }: { onLogin?: () => void }) => {
       <form onSubmit={handleMagicLink}>
         <button
           type="submit"
-          disabled={magicLoading || loading || !email}
-          style={{ width: "100%", padding: 10, fontSize: 16, background: "#f6f7fa", color: "#0b80ff", border: "1px solid #0b80ff", borderRadius: 4 }}
+          disabled={magicLoading || loading || !email.trim()}
+          style={{
+            width: "100%",
+            padding: 10,
+            fontSize: 16,
+            background: "#f6f7fa",
+            color: "#0b80ff",
+            border: "1px solid #0b80ff",
+            borderRadius: 4,
+            cursor: magicLoading || loading || !email.trim() ? "not-allowed" : "pointer"
+          }}
         >
           {magicLoading ? "Sending magic link..." : "Send Magic Link"}
         </button>
@@ -89,6 +130,7 @@ const Login = ({ onLogin }: { onLogin?: () => void }) => {
       {info && <div style={{ color: "green", marginTop: 14, textAlign: "center" }}>{info}</div>}
       <div style={{ textAlign: "center", marginTop: 18 }}>
         <button
+          type="button"
           onClick={() => navigate("/register")}
           style={{
             background: "none",
@@ -97,6 +139,7 @@ const Login = ({ onLogin }: { onLogin?: () => void }) => {
             cursor: "pointer",
             textDecoration: "underline"
           }}
+          disabled={loading || magicLoading}
         >
           Don't have an account? Sign Up
         </button>
