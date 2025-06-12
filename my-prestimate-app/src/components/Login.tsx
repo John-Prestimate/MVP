@@ -27,11 +27,10 @@ const Login = ({ onLogin }: { onLogin?: () => void }) => {
       setError(error.message);
       setPassword("");
     } else if (data?.session) {
-      alert("Login successful!"); // Optional: For debugging, remove if not needed
       if (onLogin) {
         onLogin();
       } else {
-        // Correction: Force a hard redirect to /dashboard
+        // Hard redirect to /dashboard to ensure session is picked up everywhere
         window.location.href = "/dashboard";
       }
     } else {
