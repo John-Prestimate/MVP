@@ -1,27 +1,28 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
+import { ReactNode, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSession } from "../supabase/useSession";
 
-export function useSession() {
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
+
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { session, loading } = useSession();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-      console.log("[useSession] Initial session:", data.session); // Debug log
-    });
+    console.log("[ProtectedRoute] session:", session, "loading:", loading);
+    if (!loading && !session) {
+      console.log("[ProtectedRoute] Redirecting to /login");
+      navigate("/login", { replace: true });
+    }
+  }, [session, loading, navigate]);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setLoading(false);
-      console.log("[useSession] Auth state change:", session); // Debug log
-    });
+  if (loading) {
+    console.log("[ProtectedRoute] Loading...");
+    return <div>Loading...</div>;
+  }
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  return { session, loading };
+  console.log("[ProtectedRoute] Rendering children:", !!session);
+  return <>{children}</>;
 }
