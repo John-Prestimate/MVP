@@ -31,7 +31,7 @@ const Login = ({ onLogin }: { onLogin?: () => void }) => {
       if (onLogin) {
         onLogin();
       } else {
-        // Force a hard redirect to /dashboard instead of navigate
+        // Correction: Force a hard redirect to /dashboard
         window.location.href = "/dashboard";
       }
     } else {
