@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 
-const Login = ({ onLogin }: { onLogin?: () => void }) => {
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,21 +20,13 @@ const Login = ({ onLogin }: { onLogin?: () => void }) => {
       email: email.trim(),
       password,
     });
-    console.log("Login response", { error, data });
-    console.log("Session:", data.session); 
     setLoading(false);
     if (error) {
       setError(error.message);
       setPassword("");
-     } else if (data?.session) {
-  if (onLogin) {
-    onLogin();
-  } else {
-    console.log("Redirecting to /dashboard"); // <--- Add this line!
-    window.location.href = "/dashboard";
-  }
-}
-else {
+    } else if (data?.session) {
+      navigate("/dashboard");
+    } else {
       setError("Login failed. Please try again.");
     }
   };
