@@ -26,14 +26,15 @@ const Login = ({ onLogin }: { onLogin?: () => void }) => {
     if (error) {
       setError(error.message);
       setPassword("");
-    } else if (data?.session) {
-      if (onLogin) {
-        onLogin();
-      } else {
-        // Hard redirect to /dashboard to ensure session is picked up everywhere
-        window.location.href = "/dashboard";
-      }
-    } else {
+     } else if (data?.session) {
+  if (onLogin) {
+    onLogin();
+  } else {
+    console.log("Redirecting to /dashboard"); // <--- Add this line!
+    window.location.href = "/dashboard";
+  }
+}
+else {
       setError("Login failed. Please try again.");
     }
   };
