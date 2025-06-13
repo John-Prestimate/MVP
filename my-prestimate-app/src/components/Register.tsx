@@ -2,7 +2,12 @@ import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 
-const Register = ({ onRegistered }: { onRegistered?: () => void }) => {
+type RegisterProps = {
+  onRegistered?: () => void;
+  onBackToLogin?: () => void;
+};
+
+const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,6 +30,14 @@ const Register = ({ onRegistered }: { onRegistered?: () => void }) => {
     } else {
       setSuccess("Registration successful! Check your email for a confirmation link.");
       if (onRegistered) onRegistered();
+    }
+  };
+
+  const handleBackToLogin = () => {
+    if (onBackToLogin) {
+      onBackToLogin();
+    } else {
+      navigate("/login");
     }
   };
 
@@ -60,7 +73,7 @@ const Register = ({ onRegistered }: { onRegistered?: () => void }) => {
       {success && <div style={{ color: "green", marginTop: 14, textAlign: "center" }}>{success}</div>}
       <div style={{ textAlign: "center", marginTop: 18 }}>
         <button
-          onClick={() => navigate("/login")}
+          onClick={handleBackToLogin}
           style={{ background: "none", color: "#0b80ff", border: "none", cursor: "pointer", textDecoration: "underline" }}
         >
           Back to Login
