@@ -46,7 +46,7 @@ function AppRoutes() {
 
 function App() {
   return (
-    <MantineProvider withGlobalStyles withNormalizeCSS>
+    <MantineProvider>
       <Router>
         <AppRoutes />
       </Router>
