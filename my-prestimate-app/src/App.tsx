@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { MantineProvider } from "@mantine/core";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
@@ -45,9 +46,11 @@ function AppRoutes() {
 
 function App() {
   return (
-    <Router>
-      <AppRoutes />
-    </Router>
+    <MantineProvider withGlobalStyles withNormalizeCSS>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </MantineProvider>
   );
 }
 
