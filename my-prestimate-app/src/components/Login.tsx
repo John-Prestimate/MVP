@@ -68,12 +68,12 @@ const Login = () => {
         withBorder
         style={{ minWidth: 350, width: "100%", maxWidth: 380, background: "#fff" }}
       >
-        <Stack spacing="xs">
-          <Title order={2} align="center" mb="sm">
+        <Stack gap="xs">
+          <Title order={2} ta="center" mb="sm">
             Login to Prestimate
           </Title>
           <form onSubmit={handleLogin}>
-            <Stack>
+            <Stack gap="xs">
               <TextInput
                 label="Email"
                 type="email"
@@ -105,8 +105,8 @@ const Login = () => {
             </Stack>
           </form>
 
-          <Group position="center" mt="sm" spacing={4}>
-            <Text color="dimmed" size="sm">
+          <Group justify="center" mt="sm" gap={4}>
+            <Text c="dimmed" size="sm">
               or
             </Text>
           </Group>
@@ -156,7 +156,7 @@ const Login = () => {
               color="blue"
               onClick={() => navigate("/register")}
               disabled={loading || magicLoading}
-              compact
+              size="compact-sm"
             >
               Don't have an account? Sign Up
             </Button>
