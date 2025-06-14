@@ -1,6 +1,20 @@
 import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
+import {
+  Paper,
+  TextInput,
+  PasswordInput,
+  Button,
+  Title,
+  Text,
+  Group,
+  Stack,
+  Center,
+  Alert,
+  Space,
+} from "@mantine/core";
+import { IconCheck, IconAlertCircle } from "@tabler/icons-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -46,97 +60,110 @@ const Login = () => {
   };
 
   return (
-    <div style={{
-      maxWidth: 350,
-      margin: "60px auto",
-      padding: 24,
-      border: "1px solid #e0e7ef",
-      borderRadius: 8,
-      background: "#fff"
-    }}>
-      <h2>Login to Prestimate</h2>
-      <form onSubmit={handleLogin}>
-        <div style={{ marginBottom: 12 }}>
-          <input
-            type="email"
-            required
-            placeholder="Email"
-            value={email}
-            autoComplete="username"
-            onChange={e => setEmail(e.target.value)}
-            style={{ width: "100%", padding: 8, fontSize: 16 }}
-            disabled={loading || magicLoading}
-          />
-        </div>
-        <div style={{ marginBottom: 12 }}>
-          <input
-            type="password"
-            required
-            placeholder="Password"
-            value={password}
-            autoComplete="current-password"
-            onChange={e => setPassword(e.target.value)}
-            style={{ width: "100%", padding: 8, fontSize: 16 }}
-            disabled={loading || magicLoading}
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={loading || magicLoading || !email.trim() || !password}
-          style={{
-            width: "100%",
-            padding: 10,
-            fontSize: 16,
-            background: "#0b80ff",
-            color: "#fff",
-            border: "none",
-            borderRadius: 4,
-            cursor: loading || magicLoading ? "not-allowed" : "pointer"
-          }}
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
-      <div style={{ margin: "18px 0 6px 0", textAlign: "center", color: "#888" }}>
-        or
-      </div>
-      <form onSubmit={handleMagicLink}>
-        <button
-          type="submit"
-          disabled={magicLoading || loading || !email.trim()}
-          style={{
-            width: "100%",
-            padding: 10,
-            fontSize: 16,
-            background: "#f6f7fa",
-            color: "#0b80ff",
-            border: "1px solid #0b80ff",
-            borderRadius: 4,
-            cursor: magicLoading || loading || !email.trim() ? "not-allowed" : "pointer"
-          }}
-        >
-          {magicLoading ? "Sending magic link..." : "Send Magic Link"}
-        </button>
-      </form>
-      {error && <div style={{ color: "red", marginTop: 14, textAlign: "center" }}>{error}</div>}
-      {info && <div style={{ color: "green", marginTop: 14, textAlign: "center" }}>{info}</div>}
-      <div style={{ textAlign: "center", marginTop: 18 }}>
-        <button
-          type="button"
-          onClick={() => navigate("/register")}
-          style={{
-            background: "none",
-            color: "#0b80ff",
-            border: "none",
-            cursor: "pointer",
-            textDecoration: "underline"
-          }}
-          disabled={loading || magicLoading}
-        >
-          Don't have an account? Sign Up
-        </button>
-      </div>
-    </div>
+    <Center style={{ minHeight: "100vh" }}>
+      <Paper
+        shadow="xs"
+        p="xl"
+        radius="md"
+        withBorder
+        style={{ minWidth: 350, width: "100%", maxWidth: 380, background: "#fff" }}
+      >
+        <Stack spacing="xs">
+          <Title order={2} align="center" mb="sm">
+            Login to Prestimate
+          </Title>
+          <form onSubmit={handleLogin}>
+            <Stack>
+              <TextInput
+                label="Email"
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                autoComplete="username"
+                onChange={e => setEmail(e.target.value)}
+                disabled={loading || magicLoading}
+                required
+              />
+              <PasswordInput
+                label="Password"
+                placeholder="Your password"
+                value={password}
+                autoComplete="current-password"
+                onChange={e => setPassword(e.target.value)}
+                disabled={loading || magicLoading}
+                required
+              />
+              <Button
+                type="submit"
+                loading={loading}
+                disabled={magicLoading || !email.trim() || !password}
+                fullWidth
+                mt="md"
+              >
+                Login
+              </Button>
+            </Stack>
+          </form>
+
+          <Group position="center" mt="sm" spacing={4}>
+            <Text color="dimmed" size="sm">
+              or
+            </Text>
+          </Group>
+
+          <form onSubmit={handleMagicLink}>
+            <Button
+              type="submit"
+              variant="outline"
+              color="blue"
+              fullWidth
+              loading={magicLoading}
+              disabled={loading || !email.trim()}
+              mt="xs"
+            >
+              Send Magic Link
+            </Button>
+          </form>
+
+          {error && (
+            <Alert
+              icon={<IconAlertCircle size={16} />}
+              color="red"
+              mt="md"
+              withCloseButton
+              onClose={() => setError(null)}
+            >
+              {error}
+            </Alert>
+          )}
+
+          {info && (
+            <Alert
+              icon={<IconCheck size={16} />}
+              color="green"
+              mt="md"
+              withCloseButton
+              onClose={() => setInfo(null)}
+            >
+              {info}
+            </Alert>
+          )}
+
+          <Space h="sm" />
+          <Center>
+            <Button
+              variant="subtle"
+              color="blue"
+              onClick={() => navigate("/register")}
+              disabled={loading || magicLoading}
+              compact
+            >
+              Don't have an account? Sign Up
+            </Button>
+          </Center>
+        </Stack>
+      </Paper>
+    </Center>
   );
 };
 
