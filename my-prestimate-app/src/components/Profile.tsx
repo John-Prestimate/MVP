@@ -3,21 +3,22 @@ import {
   Box,
   Button,
   Flex,
-  FormControl,
-  FormLabel,
-  FormErrorMessage,
-  Heading,
-  Input,
+  TextInput,
+  NumberInput,
   Select,
   Image,
-  VStack,
-  useToast,
-  Text,
   Stack,
+  Paper,
+  Title,
+  Group,
   Divider,
-  IconButton
-} from "@chakra-ui/react";
-import { DeleteIcon } from "@chakra-ui/icons";
+  Alert,
+  Text,
+  Loader,
+  Notification,
+  rem,
+} from "@mantine/core";
+import { IconTrash, IconUpload, IconCheck, IconAlertCircle, IconKey } from "@tabler/icons-react";
 import { supabase } from "../supabaseClient";
 
 const SERVICE_OPTIONS = [
@@ -48,15 +49,14 @@ const initialProfile = {
 const Profile: React.FC = () => {
   const [profile, setProfile] = useState(initialProfile);
   const [selectedService, setSelectedService] = useState(SERVICE_OPTIONS[0]);
-  const [servicePrice, setServicePrice] = useState("");
+  const [servicePrice, setServicePrice] = useState<number | "">("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
+  const [notif, setNotif] = useState<{ color: string; message: string; icon?: React.ReactNode } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const toast = useToast();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -64,7 +64,7 @@ const Profile: React.FC = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user?.user?.id) {
         setLoading(false);
-        toast({ title: "Not authenticated", status: "error" });
+        setNotif({ color: "red", message: "Not authenticated", icon: <IconAlertCircle size={18} /> });
         return;
       }
       let { data, error } = await supabase
@@ -73,7 +73,7 @@ const Profile: React.FC = () => {
         .eq("user_id", user.user.id)
         .single();
       if (error && error.code !== "PGRST116") {
-        toast({ title: "Failed to load profile", description: error.message, status: "error" });
+        setNotif({ color: "red", message: error.message || "Failed to load profile", icon: <IconAlertCircle size={18} /> });
       }
       if (data) {
         setProfile({
@@ -85,7 +85,7 @@ const Profile: React.FC = () => {
       setLoading(false);
     };
     fetchProfile();
-  }, [toast]);
+  }, []);
 
   const validate = () => {
     const errs: { [key: string]: string } = {};
@@ -105,7 +105,7 @@ const Profile: React.FC = () => {
     setSaving(true);
     const { data: user } = await supabase.auth.getUser();
     if (!user?.user?.id) {
-      toast({ title: "Not authenticated", status: "error" });
+      setNotif({ color: "red", message: "Not authenticated", icon: <IconAlertCircle size={18} /> });
       setSaving(false);
       return;
     }
@@ -118,9 +118,9 @@ const Profile: React.FC = () => {
       .from("profiles")
       .upsert([updatePayload], { onConflict: "user_id" });
     if (error) {
-      toast({ title: "Failed to save", description: error.message, status: "error" });
+      setNotif({ color: "red", message: error.message || "Failed to save", icon: <IconAlertCircle size={18} /> });
     } else {
-      toast({ title: "Profile saved", status: "success" });
+      setNotif({ color: "teal", message: "Profile saved", icon: <IconCheck size={18} /> });
     }
     setSaving(false);
   };
@@ -135,14 +135,14 @@ const Profile: React.FC = () => {
       .from("company-logos")
       .upload(filePath, file, { upsert: true });
     if (uploadError) {
-      toast({ title: "Logo upload failed", description: uploadError.message, status: "error" });
+      setNotif({ color: "red", message: uploadError.message || "Logo upload failed", icon: <IconAlertCircle size={18} /> });
       setLogoUploading(false);
       return;
     }
     const { data } = supabase.storage.from("company-logos").getPublicUrl(filePath);
     setProfile((p) => ({ ...p, logo_url: data.publicUrl }));
     setLogoUploading(false);
-    toast({ title: "Logo uploaded!", status: "success" });
+    setNotif({ color: "teal", message: "Logo uploaded!", icon: <IconCheck size={18} /> });
   };
 
   const handleAddService = () => {
@@ -171,143 +171,129 @@ const Profile: React.FC = () => {
   };
 
   const handleChangePassword = () => {
-    toast({ title: "Change Password not implemented yet", status: "info" });
+    setNotif({ color: "blue", message: "Change Password not implemented yet", icon: <IconKey size={18} /> });
   };
 
-  if (loading) return <div>Loading profile...</div>;
+  if (loading) return <Loader color="blue" style={{ margin: "2rem auto", display: "block" }} />;
 
   return (
     <Flex
-      direction={["column", "row"]}
-      maxW="950px"
+      gap="lg"
+      justify="center"
+      align="flex-start"
+      direction={{ base: "column", md: "row" }}
+      maw={950}
       mx="auto"
-      my={["6", "12"]}
-      gap={10}
-      p={4}
+      my={{ base: rem(24), md: rem(48) }}
+      p="md"
     >
       {/* Left: Company Info */}
-      <Box
-        bg="gray.50"
-        borderRadius="md"
-        p={6}
+      <Paper
+        withBorder
+        radius="md"
+        p="xl"
         flex={1}
-        minW="270px"
-        border="1px solid"
-        borderColor="gray.200"
+        miw={270}
+        bg="gray.0"
       >
-        <VStack spacing={5} align="stretch">
-          <Heading size="md">Profile</Heading>
-          <FormControl isInvalid={!!errors.company_name}>
-            <FormLabel>Company Name</FormLabel>
-            <Input
-              value={profile.company_name}
-              onChange={e => setProfile(p => ({ ...p, company_name: e.target.value }))}
-              placeholder="Company Name"
-            />
-            <FormErrorMessage>{errors.company_name}</FormErrorMessage>
-          </FormControl>
-          <FormControl>
-            <FormLabel>Address</FormLabel>
-            <Input
-              value={profile.address}
-              onChange={e => setProfile(p => ({ ...p, address: e.target.value }))}
-              placeholder="Address"
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel>Phone #</FormLabel>
-            <Input
-              value={profile.phone}
-              onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))}
-              placeholder="Phone Number"
-              type="tel"
-            />
-          </FormControl>
-          <FormControl isInvalid={!!errors.email}>
-            <FormLabel>Email</FormLabel>
-            <Input
-              type="email"
-              value={profile.email}
-              onChange={e => setProfile(p => ({ ...p, email: e.target.value }))}
-              placeholder="Email"
-            />
-            <FormErrorMessage>{errors.email}</FormErrorMessage>
-          </FormControl>
-          <FormControl isInvalid={!!errors.service_industry}>
-            <FormLabel>Service Industry</FormLabel>
-            <Input
-              value={profile.service_industry}
-              onChange={e => setProfile(p => ({ ...p, service_industry: e.target.value }))}
-              placeholder="e.g. Pressure Washing"
-            />
-            <FormErrorMessage>{errors.service_industry}</FormErrorMessage>
-          </FormControl>
+        <Stack gap="xs">
+          <Title order={3}>Profile</Title>
+          <TextInput
+            label="Company Name"
+            value={profile.company_name}
+            onChange={e => setProfile(p => ({ ...p, company_name: e.target.value }))}
+            error={errors.company_name}
+            placeholder="Company Name"
+          />
+          <TextInput
+            label="Address"
+            value={profile.address}
+            onChange={e => setProfile(p => ({ ...p, address: e.target.value }))}
+            placeholder="Address"
+          />
+          <TextInput
+            label="Phone #"
+            value={profile.phone}
+            onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))}
+            placeholder="Phone Number"
+            type="tel"
+          />
+          <TextInput
+            label="Email"
+            type="email"
+            value={profile.email}
+            onChange={e => setProfile(p => ({ ...p, email: e.target.value }))}
+            error={errors.email}
+            placeholder="Email"
+          />
+          <TextInput
+            label="Service Industry"
+            value={profile.service_industry}
+            onChange={e => setProfile(p => ({ ...p, service_industry: e.target.value }))}
+            error={errors.service_industry}
+            placeholder="e.g. Pressure Washing"
+          />
           <Button
-            colorScheme="blue"
+            leftSection={<IconKey size={16} />}
             variant="outline"
+            color="blue"
             onClick={handleChangePassword}
-            mt={4}
+            mt="md"
           >
             Change Password
           </Button>
-        </VStack>
-      </Box>
+        </Stack>
+      </Paper>
 
       {/* Right: Logo, Services, Pricing, Currency */}
-      <Box
-        bg="white"
-        borderRadius="md"
-        p={6}
+      <Paper
+        withBorder
+        radius="md"
+        p="xl"
         flex={1.2}
-        border="1px solid"
-        borderColor="gray.200"
-        minW="320px"
+        miw={320}
+        bg="white"
       >
-        <VStack spacing={6} align="stretch">
+        <Stack gap="md">
           {/* Logo Upload */}
-          <Box textAlign="center">
+          <Box ta="center">
             {profile.logo_url ? (
               <Image
                 src={profile.logo_url}
                 alt="Company Logo"
-                boxSize="120px"
-                objectFit="contain"
-                borderRadius="md"
+                w={120}
+                h={120}
+                fit="contain"
+                radius="md"
                 mx="auto"
-                border="1px solid"
-                borderColor="gray.200"
+                style={{ border: "1px solid #e9ecef" }}
               />
             ) : (
               <Box
-                boxSize="120px"
+                w={120}
+                h={120}
                 mx="auto"
-                bg="gray.100"
-                borderRadius="md"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                color="gray.400"
-                fontSize="xl"
-                border="1px solid"
-                borderColor="gray.200"
+                bg="gray.1"
+                style={{ borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "#adb5bd", fontSize: 22, border: "1px solid #e9ecef" }}
               >
                 Logo
               </Box>
             )}
-            <Input
+            <input
               type="file"
               accept="image/*"
               ref={fileInputRef}
+              style={{ display: "none" }}
               onChange={handleLogoUpload}
-              display="none"
             />
             <Button
-              mt={2}
-              size="sm"
+              mt="xs"
+              size="compact-sm"
               onClick={() => fileInputRef.current?.click()}
-              isLoading={logoUploading}
-              colorScheme="blue"
-              variant="ghost"
+              loading={logoUploading}
+              variant="light"
+              color="blue"
+              leftSection={<IconUpload size={14} />}
             >
               {profile.logo_url ? "Change Logo" : "Upload Logo"}
             </Button>
@@ -316,96 +302,116 @@ const Profile: React.FC = () => {
           <Divider />
 
           {/* Add Service */}
-          <FormControl isInvalid={!!errors.add_service || !!errors.services}>
-            <FormLabel>Add Service</FormLabel>
-            <Flex gap={2}>
+          <Box>
+            <Group gap={6} align="flex-end">
               <Select
+                label="Add Service"
+                data={SERVICE_OPTIONS}
                 value={selectedService}
-                onChange={e => setSelectedService(e.target.value)}
-                maxW="180px"
-              >
-                {SERVICE_OPTIONS.map(service => (
-                  <option key={service} value={service}>{service}</option>
-                ))}
-              </Select>
-              <Input
-                type="number"
-                value={servicePrice}
-                onChange={e => setServicePrice(e.target.value)}
-                placeholder="Price"
-                maxW="100px"
-                min={0}
+                onChange={v => setSelectedService(v!)}
+                w={180}
+                nothingFoundMessage="No services"
               />
-              <Button onClick={handleAddService} colorScheme="blue" variant="solid">
+              <NumberInput
+                label="Price"
+                value={servicePrice}
+                onChange={v => setServicePrice(v as number)}
+                placeholder="Price"
+                min={0}
+                w={100}
+              />
+              <Button
+                color="blue"
+                variant="filled"
+                onClick={handleAddService}
+                style={{ marginBottom: 0 }}
+              >
                 Add
               </Button>
-            </Flex>
-            <FormErrorMessage>
-              {errors.add_service || errors.services}
-            </FormErrorMessage>
-          </FormControl>
+            </Group>
+            {(errors.add_service || errors.services) && (
+              <Text c="red" size="xs" mt={4}>{errors.add_service || errors.services}</Text>
+            )}
+          </Box>
 
           {/* Services Already Added */}
           <Box>
-            <Text fontWeight="bold">Services Already Added</Text>
+            <Text fw={500} mb={2}>Services Already Added</Text>
             {profile.services.length === 0 ? (
-              <Text color="gray.400" mt={2}>No services added yet.</Text>
+              <Text c="dimmed" mt={2}>No services added yet.</Text>
             ) : (
-              <Stack mt={2} spacing={1}>
+              <Stack mt={2} gap={4}>
                 {profile.services.map(service => (
-                  <Flex
+                  <Group
                     key={service.name}
                     align="center"
                     justify="space-between"
-                    px={2}
-                    py={1}
-                    bg="gray.50"
-                    borderRadius="md"
+                    px={8}
+                    py={4}
+                    bg="gray.1"
+                    style={{ borderRadius: 7 }}
                   >
                     <Text>
                       {service.name} — {profile.currency} {service.price}
                     </Text>
-                    <IconButton
-                      size="sm"
-                      aria-label={`Remove ${service.name}`}
-                      icon={<DeleteIcon />}
-                      colorScheme="red"
-                      variant="ghost"
+                    <Button
+                      variant="subtle"
+                      color="red"
+                      size="xs"
+                      leftSection={<IconTrash size={16} />}
                       onClick={() => handleRemoveService(service.name)}
-                    />
-                  </Flex>
+                    >
+                      Remove
+                    </Button>
+                  </Group>
                 ))}
               </Stack>
             )}
           </Box>
 
           {/* Currency */}
-          <FormControl isInvalid={!!errors.currency}>
-            <FormLabel>Currency</FormLabel>
-            <Select
-              value={profile.currency}
-              onChange={e => setProfile(p => ({ ...p, currency: e.target.value }))}
-              maxW="140px"
-            >
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
-            </Select>
-            <FormErrorMessage>{errors.currency}</FormErrorMessage>
-          </FormControl>
+          <Select
+            label="Currency"
+            data={[
+              { value: "USD", label: "USD ($)" },
+              { value: "EUR", label: "EUR (€)" },
+              { value: "GBP", label: "GBP (£)" },
+            ]}
+            value={profile.currency}
+            onChange={v => setProfile(p => ({ ...p, currency: v! }))}
+            w={140}
+            error={errors.currency}
+          />
 
           <Button
-            colorScheme="blue"
+            color="blue"
             onClick={handleSaveProfile}
-            isLoading={saving}
-            size="lg"
-            alignSelf="flex-end"
-            mt={4}
+            loading={saving}
+            size="md"
+            mt="sm"
+            style={{ alignSelf: "flex-end" }}
           >
             Save Profile
           </Button>
-        </VStack>
-      </Box>
+        </Stack>
+      </Paper>
+      {notif && (
+        <Notification
+          color={notif.color as any}
+          icon={notif.icon}
+          withCloseButton
+          onClose={() => setNotif(null)}
+          style={{
+            position: "fixed",
+            top: 24,
+            right: 24,
+            zIndex: 9999,
+            maxWidth: 340,
+          }}
+        >
+          {notif.message}
+        </Notification>
+      )}
     </Flex>
   );
 };
