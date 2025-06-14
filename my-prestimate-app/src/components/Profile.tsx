@@ -12,7 +12,6 @@ import {
   Title,
   Group,
   Divider,
-  Alert,
   Text,
   Loader,
   Notification,
@@ -85,6 +84,7 @@ const Profile: React.FC = () => {
       setLoading(false);
     };
     fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const validate = () => {
@@ -274,7 +274,15 @@ const Profile: React.FC = () => {
                 h={120}
                 mx="auto"
                 bg="gray.1"
-                style={{ borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "#adb5bd", fontSize: 22, border: "1px solid #e9ecef" }}
+                style={{
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#adb5bd",
+                  fontSize: 22,
+                  border: "1px solid #e9ecef",
+                }}
               >
                 Logo
               </Box>
