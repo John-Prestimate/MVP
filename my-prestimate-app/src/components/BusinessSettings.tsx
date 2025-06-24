@@ -23,6 +23,10 @@ function BusinessSettings() {
   const [serviceEdit, setServiceEdit] = useState<any>(DEFAULT_NEW_SERVICE);
   const [userId, setUserId] = useState<string | null>(null);
 
+  // Logo state
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
       const id = data?.user?.id ?? null;
@@ -52,6 +56,7 @@ function BusinessSettings() {
       .then(data => {
         setForm(data || {});
         setServices(data?.service_types || []);
+        setLogoUrl(data?.logo_url || null); // Set logo URL from settings
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
@@ -119,12 +124,55 @@ function BusinessSettings() {
     }
   };
 
+  // Logo upload handler
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setLogoFile(e.target.files[0]);
+    }
+  };
+
+  const handleLogoUpload = async () => {
+    if (!logoFile || !userId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      // Upload to Supabase Storage (bucket: 'logos', path: userId/filename)
+      const fileExt = logoFile.name.split('.').pop();
+      const filePath = `${userId}/logo.${fileExt}`;
+      const { data, error: uploadError } = await supabase.storage.from('logos').upload(filePath, logoFile, { upsert: true });
+      if (uploadError) throw uploadError;
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage.from('logos').getPublicUrl(filePath);
+      const publicUrl = publicUrlData.publicUrl;
+      // Save URL to business_settings
+      await updateBusinessSettings({ ...form, logo_url: publicUrl });
+      setLogoUrl(publicUrl);
+      setSuccess('Logo uploaded!');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+      setLogoFile(null);
+    }
+  };
+
   if (loading) return <div>Loading business settings...</div>;
   if (error) return <div style={{color: "red"}}>Error: {error}</div>;
 
   return (
     <form onSubmit={handleSubmit} style={{marginBottom: "2em"}}>
       <h3>Business Settings</h3>
+      {/* Logo upload section */}
+      <div style={{ marginBottom: 16 }}>
+        <label>Company Logo:</label><br />
+        {logoUrl && (
+          <img src={logoUrl} alt="Company Logo" style={{ maxWidth: 120, maxHeight: 120, display: 'block', marginBottom: 8 }} />
+        )}
+        <input type="file" accept="image/*" onChange={handleLogoChange} />
+        <button type="button" onClick={handleLogoUpload} disabled={!logoFile || loading} style={{ marginLeft: 8 }}>
+          Upload Logo
+        </button>
+      </div>
       <div>
         <label>
           Currency:

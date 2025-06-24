@@ -58,30 +58,44 @@ export async function addService(
     .select("service_types, id")
     .eq("user_id", userId)
     .single();
-  if (error && error.code !== 'PGRST116') throw error; // PGRST116: No rows found
+  if (error && error.code !== 'PGRST116') {
+    console.error('[addService] fetch error:', error);
+    throw error;
+  }
 
   const newService = { key, label, unit, base_price };
 
   if (!data) {
     // No row exists, create it with this service
+    const insertPayload = {
+      user_id: userId,
+      service_types: [newService],
+    };
+    if (!Array.isArray(insertPayload.service_types)) {
+      throw new Error('[addService] service_types is not an array!');
+    }
     const { error: insertError } = await supabase
       .from("business_settings")
-      .insert([
-        {
-          user_id: userId,
-          service_types: [newService],
-        },
-      ]);
-    if (insertError) throw insertError;
+      .insert([insertPayload]);
+    if (insertError) {
+      console.error('[addService] insert error:', insertError, 'Payload:', insertPayload);
+      throw insertError;
+    }
     return newService;
   } else {
     // Row exists, update it
     const updatedServices = [...(data?.service_types || []), newService];
+    if (!Array.isArray(updatedServices)) {
+      throw new Error('[addService] updatedServices is not an array!');
+    }
     const { error: updateError } = await supabase
       .from("business_settings")
       .update({ service_types: updatedServices })
       .eq("id", data.id);
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error('[addService] update error:', updateError, 'Updated:', updatedServices);
+      throw updateError;
+    }
     return newService;
   }
 }
@@ -101,15 +115,24 @@ export async function updateService(
     .select("service_types, id")
     .eq("user_id", userId)
     .single();
-  if (error) throw error;
+  if (error) {
+    console.error('[updateService] fetch error:', error);
+    throw error;
+  }
   const updatedServices = (data?.service_types || []).map((svc: any) =>
     svc.key === key ? { ...svc, label, unit, base_price } : svc
   );
+  if (!Array.isArray(updatedServices)) {
+    throw new Error('[updateService] updatedServices is not an array!');
+  }
   const { error: updateError } = await supabase
     .from("business_settings")
     .update({ service_types: updatedServices })
     .eq("id", data.id);
-  if (updateError) throw updateError;
+  if (updateError) {
+    console.error('[updateService] update error:', updateError, 'Updated:', updatedServices);
+    throw updateError;
+  }
   return updatedServices.find((svc: any) => svc.key === key);
 }
 
@@ -122,13 +145,22 @@ export async function deleteService(userId: string, key: string) {
     .select("service_types, id")
     .eq("user_id", userId)
     .single();
-  if (error) throw error;
+  if (error) {
+    console.error('[deleteService] fetch error:', error);
+    throw error;
+  }
   const updatedServices = (data?.service_types || []).filter(
     (svc: any) => svc.key !== key
   );
+  if (!Array.isArray(updatedServices)) {
+    throw new Error('[deleteService] updatedServices is not an array!');
+  }
   const { error: updateError } = await supabase
     .from("business_settings")
     .update({ service_types: updatedServices })
     .eq("id", data.id);
-  if (updateError) throw updateError;
+  if (updateError) {
+    console.error('[deleteService] update error:', updateError, 'Updated:', updatedServices);
+    throw updateError;
+  }
 }
