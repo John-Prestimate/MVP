@@ -19,6 +19,7 @@ import {
 } from "@mantine/core";
 import { IconTrash, IconUpload, IconCheck, IconAlertCircle, IconKey } from "@tabler/icons-react";
 import { supabase } from "../supabaseClient";
+import { fetchServices, addService, deleteService } from "../api/services";
 
 const SERVICE_OPTIONS = [
   "Roof Wash",
@@ -30,6 +31,7 @@ const SERVICE_OPTIONS = [
 ];
 
 type Service = {
+  id?: number;
   name: string;
   price: number;
 };
@@ -54,8 +56,15 @@ const Profile: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [notif, setNotif] = useState<{ color: string; message: string; icon?: React.ReactNode } | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data?.user?.id ?? null);
+    });
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -86,6 +95,17 @@ const Profile: React.FC = () => {
     fetchProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    setLoading(true);
+    fetchServices(userId)
+      .then(data => {
+        setProfile(p => ({ ...p, services: data }));
+      })
+      .catch(e => setNotif({ color: "red", message: e instanceof Error ? e.message : String(e), icon: <IconAlertCircle size={18} /> }))
+      .finally(() => setLoading(false));
+  }, [userId]);
 
   const validate = () => {
     const errs: { [key: string]: string } = {};
@@ -145,9 +165,8 @@ const Profile: React.FC = () => {
     setNotif({ color: "teal", message: "Logo uploaded!", icon: <IconCheck size={18} /> });
   };
 
-  const handleAddService = () => {
-    const priceNum = Number(servicePrice);
-    if (!selectedService || !servicePrice || isNaN(priceNum) || priceNum <= 0) {
+  const handleAddService = async () => {
+    if (!userId || !selectedService || !servicePrice || isNaN(Number(servicePrice)) || Number(servicePrice) <= 0) {
       setErrors((e) => ({ ...e, add_service: "Select a service and enter a valid price" }));
       return;
     }
@@ -155,19 +174,35 @@ const Profile: React.FC = () => {
       setErrors((e) => ({ ...e, add_service: "Service already added" }));
       return;
     }
-    setProfile((p) => ({
-      ...p,
-      services: [...p.services, { name: selectedService, price: priceNum }],
-    }));
-    setServicePrice("");
-    setErrors((e) => ({ ...e, add_service: "" }));
+    // Use selectedService as label and key, and provide a default unit (e.g., 'ft²')
+    const key = selectedService.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const label = selectedService;
+    const unit = "ft²"; // Or allow user to select unit if you want
+    const base_price = Number(servicePrice);
+    try {
+      await addService(userId, key, label, unit, base_price);
+      // Always re-fetch services from Supabase after add
+      const data = await fetchServices(userId);
+      setProfile((p) => ({ ...p, services: data.map((svc: any) => ({ name: svc.label, price: svc.base_price })) }));
+      setServicePrice("");
+      setErrors((e) => ({ ...e, add_service: "" }));
+    } catch (e) {
+      setNotif({ color: "red", message: e instanceof Error ? e.message : String(e), icon: <IconAlertCircle size={18} /> });
+    }
   };
 
-  const handleRemoveService = (name: string) => {
-    setProfile((p) => ({
-      ...p,
-      services: p.services.filter((s) => s.name !== name),
-    }));
+  const handleRemoveService = async (name: string) => {
+    if (!userId) return;
+    // Find the service by name, then use its key
+    const key = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    try {
+      await deleteService(userId, key);
+      // Always re-fetch services from Supabase after remove
+      const data = await fetchServices(userId);
+      setProfile((p) => ({ ...p, services: data.map((svc: any) => ({ name: svc.label, price: svc.base_price })) }));
+    } catch (e) {
+      setNotif({ color: "red", message: e instanceof Error ? e.message : String(e), icon: <IconAlertCircle size={18} /> });
+    }
   };
 
   const handleChangePassword = () => {

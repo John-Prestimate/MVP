@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { getBusinessSettings, updateBusinessSettings } from '../api/businessSettings';
+import { fetchServices, addService, deleteService } from '../api/services';
+import { supabase } from '../supabaseClient';
+import { ensureBusinessSettings } from '../api/ensureBusinessSettings'; // <-- NEW IMPORT
 
 // Editable default for adding new services
 const DEFAULT_NEW_SERVICE = {
@@ -18,6 +21,30 @@ function BusinessSettings() {
   // For editing services
   const [services, setServices] = useState<any[]>([]);
   const [serviceEdit, setServiceEdit] = useState<any>(DEFAULT_NEW_SERVICE);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      const id = data?.user?.id ?? null;
+      setUserId(id);
+      if (id) {
+        try {
+          await ensureBusinessSettings(id);
+        } catch (e) {
+          setError(e instanceof Error ? e.message : String(e));
+        }
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    setLoading(true);
+    fetchServices(userId)
+      .then(data => setServices(data))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [userId]);
 
   useEffect(() => {
     setLoading(true);
@@ -41,16 +68,36 @@ function BusinessSettings() {
     setServices(newServices);
   };
 
-  const handleRemoveService = (idx: number) => {
-    const newServices = [...services];
-    newServices.splice(idx, 1);
-    setServices(newServices);
+  const handleRemoveService = async (idx: number) => {
+    if (!userId) return;
+    const svc = services[idx];
+    try {
+      await deleteService(userId, svc.key); // Use key, not id
+      // Always re-fetch services from Supabase after remove
+      const data = await fetchServices(userId);
+      setServices(data);
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
-  const handleAddService = () => {
-    if (!serviceEdit.key || !serviceEdit.label) return;
-    setServices([...services, { ...serviceEdit, base_price: Number(serviceEdit.base_price) }]);
-    setServiceEdit(DEFAULT_NEW_SERVICE);
+  const handleAddService = async () => {
+    if (!userId || !serviceEdit.key || !serviceEdit.label || !serviceEdit.unit || serviceEdit.base_price === undefined) return;
+    try {
+      await addService(
+        userId,
+        serviceEdit.key,
+        serviceEdit.label,
+        serviceEdit.unit,
+        Number(serviceEdit.base_price)
+      );
+      // Always re-fetch services from Supabase after add
+      const data = await fetchServices(userId);
+      setServices(data);
+      setServiceEdit(DEFAULT_NEW_SERVICE);
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   const handleEditServiceInput = (e: React.ChangeEvent<HTMLInputElement>) => {

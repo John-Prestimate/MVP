@@ -1,54 +1,28 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
-import Profile from "./components/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
-
-function AppRoutes() {
-  const navigate = useNavigate();
-
-  return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route
-        path="/register"
-        element={
-          <Register
-            onRegistered={() => navigate("/login")}
-            onBackToLogin={() => navigate("/login")}
-          />
-        }
-      />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-      {/* Default route: always redirect to login if not matched */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
-  );
-}
+import { ShowUserId } from "./ShowUserId"; // <--- Add this import
 
 function App() {
   return (
     <MantineProvider>
       <Router>
-        <AppRoutes />
+        {/* ShowUserId runs on every route for debugging */}
+        <ShowUserId />
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
       </Router>
     </MantineProvider>
   );
