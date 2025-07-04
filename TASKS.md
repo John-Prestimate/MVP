@@ -57,6 +57,24 @@
 
 ---
 
+# Discovered During Work
+- [ ] Implement AI-assisted detection for driveways and yards (future ML integration) — 2025-06-29
+- [ ] Consider integrating a cloud AI API for more accurate feature detection (future)
+
+# Added 2025-06-29
+- [ ] Pro tier: Add AI-assisted measuring for roof and house using OSM building polygons (MVP)
+
+# Feature Gating and Estimate Limits
+- [ ] Implement feature gating in MapView.tsx for estimator UI and logic (see June 30, 2025):
+  - [ ] Block estimator if trial expired and not subscribed.
+  - [ ] Limit Basic to 100 estimates/month.
+  - [ ] Hide AI for non-Pro/Trial.
+  - [ ] Remove address for Basic users in emails.
+  - [ ] Show estimate count for Basic users.
+- [ ] TODO: Implement robust monthly estimate tracking per user in backend (for Basic plan enforcement).
+- [ ] TODO: Add tests for feature gating and estimate limits in /tests.
+- [x] DONE: Feature gating logic and UI in MapView.tsx (2025-06-30).
+
 ## ✅ Accomplished in this session:
 - Diagnosed and fixed Supabase environment variable loading issue by placing `.env` in the project root
 - Confirmed app now loads environment variables and connects to Supabase without console errors

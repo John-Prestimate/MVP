@@ -10,8 +10,7 @@ import { fromLonLat, toLonLat } from 'ol/proj';
 import GeoJSON from 'ol/format/GeoJSON';
 import osmtogeojson from 'osmtogeojson';
 import { Fill, Stroke, Style, Icon, Text } from 'ol/style';
-import { Select, Draw } from 'ol/interaction';
-import { click } from 'ol/events/condition';
+import { Draw } from 'ol/interaction';
 import { getArea, getLength } from 'ol/sphere';
 import { createClient } from '@supabase/supabase-js';
 import Feature from 'ol/Feature';
@@ -26,7 +25,54 @@ const supabase = createClient(
 const projectId = uuidv4();
 const MENU_WIDTH = 340;
 
+// Fallback static config for robust operation
+const DEFAULT_SERVICE_TYPES = [
+  { key: 'house', label: 'House Wash', unit: 'ft²', base_price: 0.25 },
+  { key: 'roof', label: 'Roof Wash', unit: 'ft²', base_price: 0.30 },
+  { key: 'fence', label: 'Fence Wash', unit: 'ft', base_price: 0.40 },
+  { key: 'driveway', label: 'Driveway Wash', unit: 'ft²', base_price: 0.20 },
+  { key: 'deck', label: 'Deck Wash', unit: 'ft²', base_price: 0.20 },
+  { key: 'patio', label: 'Patio Wash', unit: 'ft²', base_price: 0.20 },
+];
+
+// Helper to get user ID from URL
+function getUserIdFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('user');
+}
+
+// Define Customer type for correct typing
+interface Customer {
+  id: string;
+  created_at: string;
+  subscription_tier: string;
+  subscription_active: boolean;
+  // Add more fields as needed
+}
+
 const MapView = () => {
+  // --- Customer subscription info ---
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [loadingCustomer, setLoadingCustomer] = useState(true);
+
+  useEffect(() => {
+    const userId = getUserIdFromUrl();
+    if (!userId) {
+      setLoadingCustomer(false);
+      return;
+    }
+    async function fetchCustomer() {
+      const { data } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      setCustomer(data);
+      setLoadingCustomer(false);
+    }
+    fetchCustomer();
+  }, []);
+
   // --- Dynamic services loading ---
   const [serviceTypes, setServiceTypes] = useState<any[]>([]);
   const [loadingServices, setLoadingServices] = useState(true);
@@ -43,7 +89,7 @@ const MapView = () => {
   const [addressInput, setAddressInput] = useState('');
   const [drawMode, setDrawMode] = useState<'Polygon' | 'LineString'>('Polygon');
   const [estimates, setEstimates] = useState<any[]>([]);
-  const [lockedAddress, setLockedAddress] = useState<string | null>(null);
+  // const [lockedAddress, setLockedAddress] = useState<string | null>(null); // Unused
   const [menuPos, setMenuPos] = useState({ top: 20, left: 20 });
   const [dragging, setDragging] = useState(false);
   const dragOffset = useRef({ x: 0, y: 0 });
@@ -60,22 +106,35 @@ const MapView = () => {
   useEffect(() => {
     async function loadServices() {
       setLoadingServices(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setServiceTypes([]);
-        setLoadingServices(false);
-        return;
-      }
-      const { data, error } = await supabase
-        .from('business_settings')
-        .select('service_types')
-        .eq('user_id', user.id)
-        .single();
-      if (error || !data?.service_types) {
-        setServiceTypes([]);
-      } else {
-        setServiceTypes(data.service_types);
-        if (data.service_types.length > 0) setServiceType(data.service_types[0].key);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setServiceTypes(DEFAULT_SERVICE_TYPES);
+          setServiceType(DEFAULT_SERVICE_TYPES[0].key);
+          setLoadingServices(false);
+          return;
+        }
+        const { data } = await supabase
+          .from('business_settings')
+          .select('service_types')
+          .eq('user_id', user.id)
+          .single();
+        if (
+          !data?.service_types ||
+          !Array.isArray(data.service_types) ||
+          data.service_types.length === 0
+        ) {
+          setServiceTypes(DEFAULT_SERVICE_TYPES);
+          setServiceType(DEFAULT_SERVICE_TYPES[0].key);
+        } else {
+          setServiceTypes(data.service_types);
+          setServiceType(data.service_types[0].key);
+        }
+      } catch (err) {
+        setServiceTypes(DEFAULT_SERVICE_TYPES);
+        setServiceType(DEFAULT_SERVICE_TYPES[0].key);
+        // Optionally log error
+        console.error('Failed to load services from backend, using default config.', err);
       }
       setLoadingServices(false);
     }
@@ -148,9 +207,18 @@ const MapView = () => {
     });
     draw.on('drawend', async (e) => {
       const geometry = e.feature.getGeometry();
-      const address =
-        confirmedAddressRef.current ||
-        `Lat: ${toLonLat(geometry.getFirstCoordinate())[1].toFixed(5)}, Lon: ${toLonLat(geometry.getFirstCoordinate())[0].toFixed(5)}`;
+      let address = confirmedAddressRef.current;
+      if (!address) {
+        if (
+          geometry &&
+          typeof (geometry as any).getFirstCoordinate === 'function'
+        ) {
+          const coords = (geometry as any).getFirstCoordinate();
+          address = `Lat: ${toLonLat(coords)[1].toFixed(5)}, Lon: ${toLonLat(coords)[0].toFixed(5)}`;
+        } else {
+          address = 'Unknown location';
+        }
+      }
       await handleEstimate({
         geometry,
         service: serviceTypeRef.current,
@@ -233,7 +301,7 @@ const MapView = () => {
         const coords = fromLonLat([lon, lat]);
         const label = feature.place_name || addressInput;
         confirmedAddressRef.current = label;
-        setLockedAddress(label);
+        // setLockedAddress(label);
         const view = mapRef.current?.getView();
         if (view) {
           view.animate({ center: coords, zoom: 18, duration: 1000 });
@@ -249,6 +317,58 @@ const MapView = () => {
     }
   };
 
+  // --- Subscription logic helpers ---
+  // Returns true if the user is in their 30-day free trial
+  function isTrialActive() {
+    if (!customer || !customer.created_at) return false;
+    const created = new Date(customer.created_at);
+    const now = new Date();
+    const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays <= 30;
+  }
+
+  // Returns true if the user is Pro
+  function isPro() {
+    return customer && customer.subscription_tier === 'Pro';
+  }
+
+  // Returns true if the user is Basic
+  function isBasic() {
+    return customer && customer.subscription_tier === 'Basic';
+  }
+
+  // --- Feature Gating ---
+  // Reason: Block estimator if trial expired, not subscribed, or subscription is inactive (per Stripe webhook)
+  const isTrial = isTrialActive();
+  const isProUser = isPro();
+  const isBasicUser = isBasic();
+  const isSubscriptionActive = customer && (customer.subscription_active === true);
+  const isBlocked = (!isProUser && !isBasicUser && !isTrial) || !isSubscriptionActive;
+
+  // --- Estimate count for Basic plan enforcement ---
+  const [basicEstimateCount, setBasicEstimateCount] = useState<number>(0);
+  const [loadingEstimateCount, setLoadingEstimateCount] = useState(false);
+
+  useEffect(() => {
+    // Only fetch for Basic users
+    if (!isBasicUser || !customer?.id) return;
+    setLoadingEstimateCount(true);
+    async function fetchEstimateCount() {
+      const { count } = await supabase
+        .from('estimates')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', customer?.id); // Fix: use optional chaining
+      if (typeof count === 'number') {
+        setBasicEstimateCount(count);
+      }
+      setLoadingEstimateCount(false);
+    }
+    fetchEstimateCount();
+  }, [isBasicUser, customer]);
+
+  const BASIC_ESTIMATE_LIMIT = 100;
+  const isBasicLimitReached = isBasicUser && basicEstimateCount >= BASIC_ESTIMATE_LIMIT;
+
   // --- Estimate logic (use service from DB) ---
   const handleEstimate = async ({
     geometry,
@@ -263,19 +383,16 @@ const MapView = () => {
     storyCount?: number;
     fenceHeight?: number;
   }) => {
+    if (isBlocked) return;
+    if (isBasicLimitReached) return;
     const svc = serviceTypes.find(s => s.key === service);
     if (!svc) return;
-
     let measurement = 0;
     if (svc.unit === 'ft²') {
-      // area in sq ft (for polygons)
       measurement = parseFloat((getArea(geometry) * 10.7639).toFixed(0));
     } else if (svc.unit === 'ft') {
-      // length in ft (for lines, like fences)
       measurement = parseFloat((getLength(geometry) * 3.28084 * (fenceHeight || 1)).toFixed(0));
     }
-    // You can add custom logic per service here
-
     const cost = parseFloat((measurement * svc.base_price).toFixed(2));
     const description =
       svc.key === 'house' && storyCount
@@ -283,30 +400,31 @@ const MapView = () => {
         : svc.key === 'fence' && fenceHeight
         ? `${fenceHeight}ft ${svc.label}`
         : svc.label;
-
     const estimate = {
       id: uuidv4(),
       project_id: projectId,
-      address,
+      address: (isProUser || isTrial) ? address : '', // Basic: no address
       service_type: svc.key,
       measurement,
       unit: svc.unit,
       estimated_cost: cost,
       description,
+      user_id: customer?.id || null, // For tracking
     };
     setEstimates((prev) => [...prev, estimate]);
     await saveEstimateToSupabase(estimate);
     await sendEstimateEmail(estimate);
+    if (isBasicUser) setBasicEstimateCount(c => c + 1);
   };
 
-  // --- Save estimate to DB and email (no changes) ---
+  // --- Save estimate to DB and email (feature gated) ---
   const sendEstimateEmail = async (estimate: any) => {
     try {
       await fetch('https://formspree.io/f/mqabzklw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          address: estimate.address,
+          address: (isProUser || isTrial) ? estimate.address : undefined, // Basic: no address
           service_type: estimate.service_type,
           measurement: estimate.measurement,
           estimated_cost: estimate.estimated_cost,
@@ -335,16 +453,8 @@ const MapView = () => {
       if (source) source.clear();
     }
     setAddressInput('');
-    setLockedAddress(null);
+    // setLockedAddress(null);
     confirmedAddressRef.current = null;
-  };
-
-  const handleUndo = () => {
-    const source = drawingLayerRef.current.getSource();
-    const features = source?.getFeatures();
-    if (features?.length) {
-      source?.removeFeature(features[features.length - 1]);
-    }
   };
 
   // Draggable menu logic
@@ -375,188 +485,222 @@ const MapView = () => {
     };
   }, [dragging, menuPos.left, menuPos.top]);
 
-  // --- UI ---
-  // Determine if "Stories" or "Fence Height" is needed for current service
-  const currentSvc = serviceTypes.find(s => s.key === serviceType);
-  const needsStory = currentSvc?.key === 'house';
-  const needsFenceHeight = currentSvc?.key === 'fence';
-
+  // --- Render ---
+  if (loadingCustomer) return <div>Loading customer data...</div>;
   return (
-    <div style={{ position: 'relative' }}>
-      <div id="map" style={{ width: '100%', height: '600px' }}></div>
+    <div style={{ display: 'flex', height: '100vh' }}>
+      {/* Map container */}
       <div
+        id="map"
         style={{
-          position: 'absolute',
-          top: menuPos.top,
-          left: menuPos.left,
-          width: MENU_WIDTH,
-          backgroundColor: 'white',
-          borderRadius: 8,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
-          zIndex: 1000,
-          userSelect: dragging ? 'none' : 'auto',
-          minHeight: 160,
-          boxSizing: 'border-box',
+          flex: 1,
+          position: 'relative',
+          overflow: 'hidden',
+          touchAction: 'none',
         }}
-        onMouseDown={handleMenuMouseDown}
+      />
+      {/* Menu panel (collapsed by default) */}
+      <div
+        className="menu-panel"
+        style={{
+          width: MENU_WIDTH,
+          backgroundColor: '#fff',
+          borderLeft: '1px solid #ddd',
+          padding: 16,
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+        }}
       >
+        {/* Draggable handle */}
         <div
           className="menu-drag-handle"
           style={{
-            boxSizing: 'border-box',
             width: '100%',
-            borderTopLeftRadius: 8,
-            borderTopRightRadius: 8,
-            background: "linear-gradient(to right, #f8fafc 70%, #e0e7ef 100%)",
-            borderBottom: '1px solid #e0e7ef',
-            display: 'flex',
-            alignItems: 'center',
-            height: 30,
-            fontWeight: 600,
-            letterSpacing: 0.5,
-            fontSize: 15,
-            cursor: 'move',
-            paddingLeft: 16,
-            paddingRight: 16,
+            height: 10,
+            backgroundColor: '#f0f0f0',
+            cursor: 'ns-resize',
+            position: 'absolute',
+            top: 0,
+            left: 0,
           }}
-        >
-          Prestimate
+          onMouseDown={handleMenuMouseDown}
+        />
+        {/* Service type selection */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontWeight: 'bold', marginBottom: 8, display: 'block' }}>
+            Select Service Type
+          </label>
+          <select
+            value={serviceType}
+            onChange={(e) => setServiceType(e.target.value)}
+            disabled={loadingServices}
+            style={{
+              width: '100%',
+              padding: 8,
+              fontSize: 14,
+              borderRadius: 4,
+              border: '1px solid #ccc',
+            }}
+          >
+            {serviceTypes.map((type) => (
+              <option key={type.key} value={type.key}>
+                {type.label}
+              </option>
+            ))}
+          </select>
         </div>
-        <div style={{ boxSizing: 'border-box', width: '100%', padding: 16 }}>
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ width: 100, display: 'inline-block', fontWeight: 500 }}>
-              Service Type:
-            </label>
-            {loadingServices ? (
-              <span>Loading...</span>
-            ) : (
-              <select
-                value={serviceType}
-                onChange={e => setServiceType(e.target.value)}
-                style={{ width: 190, fontSize: 15, padding: '2px 5px' }}
-              >
-                {serviceTypes.map(svc => (
-                  <option key={svc.key} value={svc.key}>
-                    {svc.label}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-          {needsStory && (
-            <div style={{ marginBottom: 10 }}>
-              <label style={{ width: 100, display: 'inline-block', fontWeight: 500 }}>
-                Stories:
-              </label>
-              <select
-                value={storyCount}
-                onChange={e => setStoryCount(Number(e.target.value))}
-                style={{ width: 190, fontSize: 15, padding: '2px 5px' }}
-              >
-                <option value={1}>1</option>
-                <option value={2}>2</option>
-                <option value={3}>3</option>
-              </select>
-            </div>
-          )}
-          {needsFenceHeight && (
-            <div style={{ marginBottom: 10 }}>
-              <label style={{ width: 100, display: 'inline-block', fontWeight: 500 }}>
-                Fence Height:
-              </label>
-              <select
-                value={fenceHeight}
-                onChange={e => setFenceHeight(Number(e.target.value))}
-                style={{ width: 190, fontSize: 15, padding: '2px 5px' }}
-              >
-                <option value={4}>4 ft</option>
-                <option value={6}>6 ft</option>
-                <option value={8}>8 ft</option>
-              </select>
-            </div>
-          )}
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ width: 100, display: 'inline-block', fontWeight: 500 }}>
-              Draw Mode:
-            </label>
-            <select
-              value={drawMode}
-              style={{ width: 190, fontSize: 15, padding: '2px 5px' }}
-              disabled
-            >
-              <option value="Polygon">Polygon</option>
-              <option value="LineString">Line</option>
-            </select>
-          </div>
-          <div style={{ fontSize: 13, color: "#0b80ff", margin: "4px 0 10px 0", minHeight: 20 }}>
-            {drawMode === 'Polygon' && (
-              <>Draw a polygon on the map to estimate.</>
-            )}
-            {drawMode === 'LineString' && (
-              <>Draw a line on the map to estimate.</>
-            )}
-          </div>
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ width: 100, display: 'inline-block', fontWeight: 500 }}>
-              Address:
+        {/* Address input and search */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontWeight: 'bold', marginBottom: 8, display: 'block' }}>
+            Enter Address
+          </label>
+          <input
+            type="text"
+            value={addressInput}
+            onChange={(e) => setAddressInput(e.target.value)}
+            placeholder="e.g. 123 Main St, Anytown, USA"
+            style={{
+              width: '100%',
+              padding: 8,
+              fontSize: 14,
+              borderRadius: 4,
+              border: '1px solid #ccc',
+            }}
+          />
+          <button
+            onClick={handleSearch}
+            style={{
+              marginTop: 8,
+              width: '100%',
+              padding: 10,
+              fontSize: 14,
+              borderRadius: 4,
+              border: 'none',
+              backgroundColor: '#007bff',
+              color: '#fff',
+              cursor: 'pointer',
+            }}
+          >
+            Search
+          </button>
+        </div>
+        {/* Story and height inputs (for fence/house estimates) */}
+        {(serviceType === 'house' || serviceType === 'fence') && (
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontWeight: 'bold', marginBottom: 8, display: 'block' }}>
+              Number of Stories
             </label>
             <input
-              value={addressInput}
-              onChange={e => setAddressInput(e.target.value)}
-              style={{ width: 133, fontSize: 15, padding: '2px 5px', marginRight: 4 }}
+              type="number"
+              value={storyCount}
+              onChange={(e) => setStoryCount(Math.max(1, parseInt(e.target.value)))}
+              min="1"
+              style={{
+                width: '100%',
+                padding: 8,
+                fontSize: 14,
+                borderRadius: 4,
+                border: '1px solid #ccc',
+              }}
             />
-            <button onClick={handleSearch} style={{ fontSize: 14, padding: '2px 10px' }}>
-              Go
-            </button>
+            {serviceType === 'fence' && (
+              <>
+                <label style={{ fontWeight: 'bold', marginTop: 16, marginBottom: 8, display: 'block' }}>
+                  Fence Height (ft)
+                </label>
+                <input
+                  type="number"
+                  value={fenceHeight}
+                  onChange={(e) => setFenceHeight(Math.max(1, parseInt(e.target.value)))}
+                  min="1"
+                  style={{
+                    width: '100%',
+                    padding: 8,
+                    fontSize: 14,
+                    borderRadius: 4,
+                    border: '1px solid #ccc',
+                  }}
+                />
+              </>
+            )}
           </div>
-          <div style={{ fontSize: 12, color: lockedAddress ? 'green' : '#999', marginBottom: 10, minHeight: 18 }}>
-            {lockedAddress
-              ? <>Confirmed: <b>{lockedAddress}</b></>
-              : <>Confirm address with "Go" before estimating.</>
-            }
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <button onClick={handleReset} style={{
-              flex: 1,
+        )}
+        {/* Draw/Reset buttons */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 'auto' }}>
+          <button
+            onClick={handleReset}
+            style={{
+              padding: 10,
               fontSize: 14,
-              padding: '6px 0',
-              borderRadius: 5,
-              border: '1px solid #e0e7ef',
-              background: '#f9fafc',
-              cursor: 'pointer'
-            }}>
-              Reset
-            </button>
-            <button onClick={handleUndo} style={{
+              borderRadius: 4,
+              border: 'none',
+              backgroundColor: '#dc3545',
+              color: '#fff',
+              cursor: 'pointer',
               flex: 1,
+              marginRight: 8,
+            }}
+          >
+            Reset
+          </button>
+          <button
+            onClick={() => setDrawMode(drawMode === 'Polygon' ? 'LineString' : 'Polygon')}
+            style={{
+              padding: 10,
               fontSize: 14,
-              padding: '6px 0',
-              borderRadius: 5,
-              border: '1px solid #e0e7ef',
-              background: '#f9fafc',
-              cursor: 'pointer'
-            }}>
-              Undo Last Shape
-            </button>
-          </div>
-          {estimates.length > 0 && (
-            <div style={{
-              marginTop: 10,
-              background: '#f8fafc',
-              borderRadius: 6,
-              padding: '8px 10px',
-              border: '1px solid #e0e7ef'
-            }}>
-              <strong>Estimates:</strong>
-              <ul style={{ margin: '6px 0 0 10px', padding: 0, fontSize: 14 }}>
-                {estimates.map((e) => (
-                  <li key={e.id} style={{ marginBottom: 2 }}>
-                    <strong>{e.description}</strong>: {e.measurement} {e.unit} — <b>${e.estimated_cost}</b>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+              borderRadius: 4,
+              border: 'none',
+              backgroundColor: '#28a745',
+              color: '#fff',
+              cursor: 'pointer',
+              flex: 1,
+            }}
+          >
+            {drawMode === 'Polygon' ? 'Draw Line' : 'Draw Area'}
+          </button>
+        </div>
+        {/* Estimates list (collapsed by default) */}
+        <div
+          style={{
+            marginTop: 16,
+            padding: 16,
+            borderRadius: 4,
+            border: '1px solid #ddd',
+            backgroundColor: '#f9f9f9',
+          }}
+        >
+          <div style={{ fontWeight: 'bold', marginBottom: 8 }}>Estimates</div>
+          {estimates.length === 0 ? (
+            <div style={{ color: '#666', fontSize: 14 }}>No estimates generated yet.</div>
+          ) : (
+            estimates.map((estimate) => (
+              <div
+                key={estimate.id}
+                style={{
+                  padding: 8,
+                  borderRadius: 4,
+                  border: '1px solid #007bff',
+                  backgroundColor: '#fff',
+                  marginBottom: 8,
+                }}
+              >
+                <div style={{ fontWeight: 'bold', marginBottom: 4 }}>{estimate.description}</div>
+                <div style={{ color: '#555', fontSize: 13, marginBottom: 4 }}>
+                  Address: {estimate.address}
+                </div>
+                <div style={{ color: '#555', fontSize: 13, marginBottom: 4 }}>
+                  Service Type: {estimate.service_type}
+                </div>
+                <div style={{ color: '#555', fontSize: 13, marginBottom: 4 }}>
+                  Measurement: {estimate.measurement} {estimate.unit}
+                </div>
+                <div style={{ color: '#555', fontSize: 13, marginBottom: 4 }}>
+                  Estimated Cost: ${estimate.estimated_cost.toFixed(2)}
+                </div>
+              </div>
+            ))
+          }
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -17,6 +17,7 @@ import {
 import { fetchServices, addService, updateService, deleteService } from "../api/services";
 import { supabase } from "../supabaseClient";
 import { ensureBusinessSettings } from "../api/ensureBusinessSettings";
+import EstimateUsageDashboard from './EstimateUsageDashboard';
 
 // Type for a service
 export type Service = {
@@ -302,6 +303,8 @@ const Dashboard = () => {
               Upload Logo
             </Button>
             <Divider my="sm" />
+            {/* Estimate usage for business user */}
+            {userId && <EstimateUsageDashboard userId={userId} />}
             <Button variant="filled" color="green" onClick={handleSaveCompanyInfo}>
               Save Company Info
             </Button>

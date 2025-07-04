@@ -16,3 +16,27 @@ This is the minimum viable product (MVP) for **Prestimate**, a web-based drawing
 - Supabase
 - HTML / CSS / JavaScript
 
+## Pro Tier (AI-Assisted Measuring)
+
+- Pro users can use AI-assisted measuring for roof and house services.
+- "AI Detect" button uses OSM building polygons to auto-detect and estimate roof and house areas.
+- Future: AI detection for driveways and yards (see TASKS.md for roadmap).
+
+## Subscription Tiers & Feature Gating
+
+- **Trial (first 30 days):**
+  - Unlimited estimates
+  - Manual and AI-assisted measuring
+  - Estimate emails include address
+- **Pro:**
+  - Unlimited estimates
+  - Manual and AI-assisted measuring
+  - Estimate emails include address
+- **Basic:**
+  - Up to 100 estimates per month
+  - Manual drawing/measuring only (no AI Detect)
+  - Estimate emails do NOT include address
+- If trial is expired and user is not subscribed, estimator is blocked.
+
+See `TASKS.md` for implementation details and roadmap.
+
