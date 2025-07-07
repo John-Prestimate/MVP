@@ -41,4 +41,5 @@ This is the minimum viable product (MVP) for **Prestimate**, a web-based drawing
 See `TASKS.md` for implementation details and roadmap.
 
 <!-- Triggered redeploy for Vercel cache clear test -->
+<!-- Email config test for Vercel deploy -->
 
