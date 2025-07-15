@@ -497,6 +497,7 @@ const MapView = () => {
           position: 'relative',
           overflow: 'hidden',
           touchAction: 'none',
+          height: '100vh', // Ensures the map is visible
         }}
       />
       {/* Menu panel (collapsed by default) */}
@@ -700,7 +701,7 @@ const MapView = () => {
                 </div>
               </div>
             ))
-          )}
+          }
         </div>
       </div>
     </div>
