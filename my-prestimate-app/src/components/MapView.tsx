@@ -700,7 +700,7 @@ const MapView = () => {
                 </div>
               </div>
             ))
-          }
+          )}
         </div>
       </div>
     </div>
