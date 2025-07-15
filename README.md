@@ -43,3 +43,54 @@ See `TASKS.md` for implementation details and roadmap.
 <!-- Triggered redeploy for Vercel cache clear test -->
 <!-- Email config test for Vercel deploy -->
 
+# Embedding Prestimate Measuring Tool on Your Website
+
+You can easily add the Prestimate measuring tool to your own website. No coding experience needed!
+
+## Option 1: Floating Button (Recommended)
+
+Adds a blue "Open Measuring Tool" button to the bottom right of your site. When clicked, a pop-up window will appear with the measuring tool.
+
+Paste this code into your website's HTML, right before the closing `</body>` tag:
+
+```html
+<script src="https://www.prestimate.io/widget.js" data-customer="CUSTOMER_ID_HERE"></script>
+```
+- Replace `CUSTOMER_ID_HERE` with your unique customer ID (provided by Prestimate).
+
+## Option 2: Direct Embed (Always Visible)
+
+Shows the measuring tool directly on your page, like a YouTube video embed. The tool is always visible.
+
+Paste this code where you want the tool to appear:
+
+```html
+<iframe src="https://www.prestimate.io/Mapview/index.html?customer=CUSTOMER_ID_HERE"
+        width="100%" height="500" style="border:none;border-radius:12px;"></iframe>
+```
+- Replace `CUSTOMER_ID_HERE` with your unique customer ID.
+
+## Example
+```html
+<!-- Button Example for customer ID 12345 -->
+<script src="https://www.prestimate.io/widget.js" data-customer="12345"></script>
+
+<!-- Direct Embed Example for customer ID 12345 -->
+<iframe src="https://www.prestimate.io/Mapview/index.html?customer=12345"
+        width="100%" height="500" style="border:none;border-radius:12px;"></iframe>
+```
+
+## Need Help?
+If you have any questions or need your customer ID, contact support at [support@prestimate.io](mailto:support@prestimate.io).
+
+---
+
+# Customer Dashboard Access
+
+To sign up or log in to your dashboard:
+1. Go to [https://www.prestimate.io/app](https://www.prestimate.io/app)
+2. Click "Register" to create an account, or "Login" if you already have one.
+3. After logging in, you can manage your services, view estimates, and more.
+
+---
+
