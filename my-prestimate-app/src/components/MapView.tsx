@@ -347,12 +347,10 @@ const MapView = () => {
 
   // --- Estimate count for Basic plan enforcement ---
   const [basicEstimateCount, setBasicEstimateCount] = useState<number>(0);
-  const [loadingEstimateCount, setLoadingEstimateCount] = useState(false);
 
   useEffect(() => {
     // Only fetch for Basic users
     if (!isBasicUser || !customer?.id) return;
-    setLoadingEstimateCount(true);
     async function fetchEstimateCount() {
       const { count } = await supabase
         .from('estimates')
@@ -361,7 +359,6 @@ const MapView = () => {
       if (typeof count === 'number') {
         setBasicEstimateCount(count);
       }
-      setLoadingEstimateCount(false);
     }
     fetchEstimateCount();
   }, [isBasicUser, customer]);
@@ -672,36 +669,36 @@ const MapView = () => {
           }}
         >
           <div style={{ fontWeight: 'bold', marginBottom: 8 }}>Estimates</div>
-          {estimates.length === 0 ? (
+            {estimates.length === 0 ? (
             <div style={{ color: '#666', fontSize: 14 }}>No estimates generated yet.</div>
-          ) : (
+            ) : (
             estimates.map((estimate) => (
               <div
-                key={estimate.id}
-                style={{
-                  padding: 8,
-                  borderRadius: 4,
-                  border: '1px solid #007bff',
-                  backgroundColor: '#fff',
-                  marginBottom: 8,
-                }}
+              key={estimate.id}
+              style={{
+                padding: 8,
+                borderRadius: 4,
+                border: '1px solid #007bff',
+                backgroundColor: '#fff',
+                marginBottom: 8,
+              }}
               >
-                <div style={{ fontWeight: 'bold', marginBottom: 4 }}>{estimate.description}</div>
-                <div style={{ color: '#555', fontSize: 13, marginBottom: 4 }}>
-                  Address: {estimate.address}
-                </div>
-                <div style={{ color: '#555', fontSize: 13, marginBottom: 4 }}>
-                  Service Type: {estimate.service_type}
-                </div>
-                <div style={{ color: '#555', fontSize: 13, marginBottom: 4 }}>
-                  Measurement: {estimate.measurement} {estimate.unit}
-                </div>
-                <div style={{ color: '#555', fontSize: 13, marginBottom: 4 }}>
-                  Estimated Cost: ${estimate.estimated_cost.toFixed(2)}
-                </div>
+              <div style={{ fontWeight: 'bold', marginBottom: 4 }}>{estimate.description}</div>
+              <div style={{ color: '#555', fontSize: 13, marginBottom: 4 }}>
+                Address: {estimate.address}
+              </div>
+              <div style={{ color: '#555', fontSize: 13, marginBottom: 4 }}>
+                Service Type: {estimate.service_type}
+              </div>
+              <div style={{ color: '#555', fontSize: 13, marginBottom: 4 }}>
+                Measurement: {estimate.measurement} {estimate.unit}
+              </div>
+              <div style={{ color: '#555', fontSize: 13, marginBottom: 4 }}>
+                Estimated Cost: ${estimate.estimated_cost.toFixed(2)}
+              </div>
               </div>
             ))
-          }
+            )}
         </div>
       </div>
     </div>
