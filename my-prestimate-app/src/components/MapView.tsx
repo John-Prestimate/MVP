@@ -12,15 +12,10 @@ import osmtogeojson from 'osmtogeojson';
 import { Fill, Stroke, Style, Icon, Text } from 'ol/style';
 import { Draw } from 'ol/interaction';
 import { getArea, getLength } from 'ol/sphere';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../supabaseClient'; // Use shared client
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import { v4 as uuidv4 } from 'uuid';
-
-const supabase = createClient(
-  'https://kmmkfdoyehmjxnfbisxo.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttbWtmZG95ZWhtam54ZmJpc3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0ODk3MzMsImV4cCI6MjA2NDA2NTczM30.50cLLw7muIHarMgkbQsD-Sg0M5hqL20mY5p3Do55SHY'
-);
 
 const projectId = uuidv4();
 const MENU_WIDTH = 340;
@@ -153,14 +148,18 @@ const MapView = () => {
 
   // Map interaction setup (minimal changes, but use serviceTypes for dynamic logic)
   useEffect(() => {
-    if (mapRef.current || !mapContainerRef.current) {
-      if (!mapContainerRef.current) {
-        console.error("Map container not found!");
-      }
+    // Only run if the container is available and map is not already initialized
+    if (!mapContainerRef.current || mapRef.current) return;
+
+    // Defensive: double-check the container exists
+    const container = mapContainerRef.current;
+    if (!container) {
+      console.error("Map container not found! (double-check)");
       return;
     }
+
     const map = new Map({
-      target: mapContainerRef.current,
+      target: container,
       layers: [
         new TileLayer({
           source: new XYZ({
@@ -199,7 +198,7 @@ const MapView = () => {
     fetchBuildingsInView();
     addDrawInteraction();
     // eslint-disable-next-line
-  }, []);
+  }, [mapContainerRef.current]); // Depend on ref
 
   // Drawing logic
   const addDrawInteraction = () => {
