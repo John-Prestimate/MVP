@@ -174,6 +174,10 @@ const MapView = () => {
       }),
     });
     mapRef.current = map;
+    // Force OpenLayers to update its size after render in case container was hidden or sized late
+    setTimeout(() => {
+      map.updateSize();
+    }, 100);
     const markerSource = new VectorSource();
     const markerLayer = new VectorLayer({
       source: markerSource,
