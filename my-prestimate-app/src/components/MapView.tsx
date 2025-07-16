@@ -158,6 +158,13 @@ const MapView = () => {
       return;
     }
 
+    // Debug: Log container and parent sizes
+    const parent = container.parentElement;
+    console.log('Map container size:', container.offsetWidth, container.offsetHeight);
+    if (parent) {
+      console.log('Map container parent size:', parent.offsetWidth, parent.offsetHeight);
+    }
+
     const map = new Map({
       target: container,
       layers: [
@@ -177,6 +184,8 @@ const MapView = () => {
     // Force OpenLayers to update its size after render in case container was hidden or sized late
     setTimeout(() => {
       map.updateSize();
+      // Log again after update
+      console.log('After map.updateSize, container size:', container.offsetWidth, container.offsetHeight);
     }, 100);
     const markerSource = new VectorSource();
     const markerLayer = new VectorLayer({
@@ -504,6 +513,7 @@ const MapView = () => {
           overflow: 'hidden',
           touchAction: 'none',
           height: '100vh', // Ensures the map is visible
+          border: '2px solid red', // Debug: visually see the map container
         }}
       />
       {/* Menu panel (collapsed by default) */}
