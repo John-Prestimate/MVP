@@ -224,6 +224,7 @@ const MapView = () => {
       type: drawMode,
     });
     draw.on('drawend', async (e) => {
+      console.log('Draw interaction ended, attempting to handle estimate...');
       const geometry = e.feature.getGeometry();
       let address = confirmedAddressRef.current;
       if (!address) {
@@ -398,10 +399,19 @@ const MapView = () => {
     storyCount?: number;
     fenceHeight?: number;
   }) => {
-    if (isBlocked) return;
-    if (isBasicLimitReached) return;
+    if (isBlocked) {
+      console.warn('Estimate blocked: user is not allowed (subscription, trial, or login issue).');
+      return;
+    }
+    if (isBasicLimitReached) {
+      console.warn('Estimate blocked: Basic plan limit reached.');
+      return;
+    }
     const svc = serviceTypes.find(s => s.key === service);
-    if (!svc) return;
+    if (!svc) {
+      console.warn('Estimate blocked: service type not found.', service);
+      return;
+    }
     let measurement = 0;
     if (svc.unit === 'ft²') {
       measurement = parseFloat((getArea(geometry) * 10.7639).toFixed(0));
@@ -426,6 +436,7 @@ const MapView = () => {
       description,
       user_id: customer?.id || null, // For tracking
     };
+    console.log('Estimate generated:', estimate);
     setEstimates((prev) => [...prev, estimate]);
     await saveEstimateToSupabase(estimate);
     await sendEstimateEmail(estimate);
