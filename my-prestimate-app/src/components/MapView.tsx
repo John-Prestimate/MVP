@@ -101,6 +101,7 @@ const MapView = () => {
   const drawingLayerRef = useRef<VectorLayer>(new VectorLayer({ source: new VectorSource() }));
   const drawInteractionRef = useRef<Draw | null>(null);
   const confirmedAddressRef = useRef<string | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
 
   // Load service_types from Supabase for the logged-in user
   useEffect(() => {
@@ -152,9 +153,14 @@ const MapView = () => {
 
   // Map interaction setup (minimal changes, but use serviceTypes for dynamic logic)
   useEffect(() => {
-    if (mapRef.current) return;
+    if (mapRef.current || !mapContainerRef.current) {
+      if (!mapContainerRef.current) {
+        console.error("Map container not found!");
+      }
+      return;
+    }
     const map = new Map({
-      target: 'map',
+      target: mapContainerRef.current,
       layers: [
         new TileLayer({
           source: new XYZ({
@@ -488,7 +494,7 @@ const MapView = () => {
     <div style={{ display: 'flex', height: '100vh' }}>
       {/* Map container */}
       <div
-        id="map"
+        ref={mapContainerRef}
         style={{
           flex: 1,
           position: 'relative',
