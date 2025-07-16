@@ -503,7 +503,7 @@ const MapView = () => {
   // --- Render ---
   if (loadingCustomer) return <div>Loading customer data...</div>;
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
       {/* Map container */}
       <div
         ref={mapContainerRef}
