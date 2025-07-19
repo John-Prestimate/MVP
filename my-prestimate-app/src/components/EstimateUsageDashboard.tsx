@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 
-const EstimateUsageDashboard = ({ userId }) => {
-  const [usage, setUsage] = useState(null);
+interface EstimateUsageDashboardProps {
+  userId: string;
+}
+
+const EstimateUsageDashboard: React.FC<EstimateUsageDashboardProps> = ({ userId }) => {
+  const [usage, setUsage] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,7 +20,7 @@ const EstimateUsageDashboard = ({ userId }) => {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .gte('created_at', startOfMonth.toISOString());
-      setUsage(count || 0);
+      setUsage(typeof count === 'number' ? count : 0);
       setLoading(false);
     }
     if (userId) fetchUsage();

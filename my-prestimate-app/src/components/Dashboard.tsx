@@ -395,6 +395,27 @@ const Dashboard = () => {
                 />
               </Paper>
             )}
+            {/* --- Widget Embed Instructions Section --- */}
+            {userId && (
+              <Paper shadow="xs" p="md" mb="md" style={{ background: '#f8f9fa' }}>
+                <Title order={5} mb="xs">Widget Embed Instructions</Title>
+                <Text mb="xs">
+                  To add the Prestimate measuring tool to your website, copy and paste the following code where you want the tool to appear:
+                </Text>
+                <Paper withBorder p="sm" style={{ background: '#fff', fontFamily: 'monospace', fontSize: 14, wordBreak: 'break-all' }}>
+                  {`<div id="prestimate-widget"></div>\n<script src="https://prestimate-frontend.vercel.app/widget.js" data-user="${userId}"></script>`}
+                </Paper>
+                <Button
+                  mt="sm"
+                  size="xs"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`<div id=\"prestimate-widget\"></div>\n<script src=\"https://prestimate-frontend.vercel.app/widget.js\" data-user=\"${userId}\"></script>`);
+                  }}
+                >
+                  Copy Embed Code
+                </Button>
+              </Paper>
+            )}
             {error && <Text style={{ color: "red" }}>{error}</Text>}
           </Stack>
         </Box>
