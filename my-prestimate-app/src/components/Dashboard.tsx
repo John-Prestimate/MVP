@@ -400,20 +400,40 @@ const Dashboard = () => {
               <Paper shadow="xs" p="md" mb="md" style={{ background: '#f8f9fa' }}>
                 <Title order={5} mb="xs">Widget Embed Instructions</Title>
                 <Text mb="xs">
-                  To add the Prestimate measuring tool to your website, copy and paste the following code where you want the tool to appear:
+                  You can embed the Prestimate measuring tool using either method below. For full platform-specific tutorials, see <a href="https://prestimate.io/how-to-embed" target="_blank" rel="noopener noreferrer">How to Embed</a>.
                 </Text>
-                <Paper withBorder p="sm" style={{ background: '#fff', fontFamily: 'monospace', fontSize: 14, wordBreak: 'break-all' }}>
-                  {`<div id="prestimate-widget"></div>\n<script src="https://prestimate-frontend.vercel.app/widget.js" data-user="${userId}"></script>`}
+                <Text fw={500} mt="sm">1. Iframe Embed (Recommended)</Text>
+                <Paper withBorder p="sm" style={{ background: '#fff', fontFamily: 'monospace', fontSize: 14, wordBreak: 'break-all', marginBottom: 8 }}>
+                  {`<iframe src="https://prestimate.io/embed?id=${userId}" width="100%" height="600" style="border:none;"></iframe>`}
                 </Paper>
                 <Button
-                  mt="sm"
+                  mt={0}
                   size="xs"
                   onClick={() => {
-                    navigator.clipboard.writeText(`<div id=\"prestimate-widget\"></div>\n<script src=\"https://prestimate-frontend.vercel.app/widget.js\" data-user=\"${userId}\"></script>`);
+                    navigator.clipboard.writeText(`<iframe src=\"https://prestimate.io/embed?id=${userId}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>`);
                   }}
+                  variant="outline"
+                  style={{ marginBottom: 12 }}
                 >
-                  Copy Embed Code
+                  Copy Iframe Code
                 </Button>
+                <Text fw={500} mt="sm">2. Script Embed (Advanced/custom use)</Text>
+                <Paper withBorder p="sm" style={{ background: '#fff', fontFamily: 'monospace', fontSize: 14, wordBreak: 'break-all', marginBottom: 8 }}>
+                  {`<script src="https://prestimate.io/widget.js" data-client-id="${userId}"></script>`}
+                </Paper>
+                <Button
+                  mt={0}
+                  size="xs"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`<script src=\"https://prestimate.io/widget.js\" data-client-id=\"${userId}\"></script>`);
+                  }}
+                  variant="outline"
+                >
+                  Copy Script Code
+                </Button>
+                <Text mt="md" size="sm" color="dimmed">
+                  For step-by-step guides for WordPress, Wix, Squarespace, Shopify, Webflow, GoDaddy, and more, visit <a href="https://prestimate.io/how-to-embed" target="_blank" rel="noopener noreferrer">prestimate.io/how-to-embed</a>.
+                </Text>
               </Paper>
             )}
             {error && <Text style={{ color: "red" }}>{error}</Text>}
