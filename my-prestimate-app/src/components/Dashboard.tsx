@@ -62,6 +62,38 @@ const Dashboard = () => {
   const [industry, setIndustry] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  // --- Subscription status logic ---
+  const [customer, setCustomer] = useState<any>(null);
+  const [loadingCustomer, setLoadingCustomer] = useState(true);
+  useEffect(() => {
+    async function fetchCustomer() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoadingCustomer(false);
+        return;
+      }
+      const { data } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      setCustomer(data);
+      setLoadingCustomer(false);
+    }
+    fetchCustomer();
+  }, []);
+
+  // Helper: trial status
+  function isTrialActive() {
+    if (!customer || !customer.created_at) return false;
+    const created = new Date(customer.created_at);
+    const now = new Date();
+    const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays <= 30;
+  }
+  const isTrial = isTrialActive();
+  const isSubscriptionActive = customer && customer.subscription_active === true;
+  const trialEnded = customer && !isTrial && !isSubscriptionActive;
 
   // Load company info and logo
   useEffect(() => {
@@ -317,6 +349,27 @@ const Dashboard = () => {
         {/* Main Content */}
         <Box style={{ flex: 1, maxWidth: 600 }}>
           <Stack gap="lg">
+            {/* --- Trial Ended Message & Upgrade Options --- */}
+            {loadingCustomer ? (
+              <Text>Loading subscription status...</Text>
+            ) : trialEnded ? (
+              <Paper shadow="xs" p="md" mb="md" style={{ background: '#fffbe6', border: '1px solid #ffe58f' }}>
+                <Title order={4}>
+                  <Text color="#d48806" span>Your free trial has ended</Text>
+                </Title>
+                <Text color="#d48806" mb="sm">
+                  To continue using Prestimate, please upgrade to a paid plan below. All features are currently blocked.
+                </Text>
+                <Group>
+                  <Button color="blue" variant="filled" onClick={() => {/* TODO: Add Pro upgrade logic */}}>
+                    Upgrade to Pro
+                  </Button>
+                  <Button color="gray" variant="outline" onClick={() => {/* TODO: Add Basic upgrade logic */}}>
+                    Choose Basic Plan
+                  </Button>
+                </Group>
+              </Paper>
+            ) : null}
             <Title order={4}>Manage Services</Title>
             <Group gap="xs">
               <TextInput
