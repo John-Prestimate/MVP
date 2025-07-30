@@ -73,7 +73,7 @@ const platforms = [
 ];
 
 const IFRAME_EXAMPLE = `<iframe src="https://prestimate-frontend.vercel.app/embed?id=your-client-id" width="100%" height="600" style="border:none;"></iframe>`;
-const SCRIPT_EXAMPLE = `<script src="https://prestimate-frontend.vercel.app/widget.js" data-client-id="your-client-id"></script>`;
+const SCRIPT_EXAMPLE = `<script src="https://prestimate-frontend.vercel.app/widget.js" data-customer="your-client-id"></script>`;
 
 export default function EmbedInstructions() {
   return (

@@ -419,13 +419,13 @@ const Dashboard = () => {
                 </Button>
                 <Text fw={500} mt="sm">2. Script Embed (Advanced/custom use)</Text>
                 <Paper withBorder p="sm" style={{ background: '#fff', fontFamily: 'monospace', fontSize: 14, wordBreak: 'break-all', marginBottom: 8 }}>
-                  {`<script src="https://prestimate-frontend.vercel.app/widget.js" data-client-id="${userId}"></script>`}
+                  {`<script src="https://prestimate-frontend.vercel.app/widget.js" data-customer="${userId}"></script>`}
                 </Paper>
                 <Button
                   mt={0}
                   size="xs"
                   onClick={() => {
-                    navigator.clipboard.writeText(`<script src=\"https://prestimate-frontend.vercel.app/widget.js\" data-client-id=\"${userId}\"></script>`);
+                    navigator.clipboard.writeText(`<script src=\"https://prestimate-frontend.vercel.app/widget.js\" data-customer=\"${userId}\"></script>`);
                   }}
                   variant="outline"
                 >
