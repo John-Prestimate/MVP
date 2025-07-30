@@ -404,13 +404,13 @@ const Dashboard = () => {
                 </Text>
                 <Text fw={500} mt="sm">1. Iframe Embed (Recommended)</Text>
                 <Paper withBorder p="sm" style={{ background: '#fff', fontFamily: 'monospace', fontSize: 14, wordBreak: 'break-all', marginBottom: 8 }}>
-                  {`<iframe src="https://prestimate.io/embed?id=${userId}" width="100%" height="600" style="border:none;"></iframe>`}
+                  {`<iframe src="https://prestimate-frontend.vercel.app/embed?id=${userId}" width="100%" height="600" style="border:none;"></iframe>`}
                 </Paper>
                 <Button
                   mt={0}
                   size="xs"
                   onClick={() => {
-                    navigator.clipboard.writeText(`<iframe src=\"https://prestimate.io/embed?id=${userId}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>`);
+                    navigator.clipboard.writeText(`<iframe src=\"https://prestimate-frontend.vercel.app/embed?id=${userId}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>`);
                   }}
                   variant="outline"
                   style={{ marginBottom: 12 }}
@@ -419,13 +419,13 @@ const Dashboard = () => {
                 </Button>
                 <Text fw={500} mt="sm">2. Script Embed (Advanced/custom use)</Text>
                 <Paper withBorder p="sm" style={{ background: '#fff', fontFamily: 'monospace', fontSize: 14, wordBreak: 'break-all', marginBottom: 8 }}>
-                  {`<script src="https://prestimate.io/widget.js" data-client-id="${userId}"></script>`}
+                  {`<script src="https://prestimate-frontend.vercel.app/widget.js" data-client-id="${userId}"></script>`}
                 </Paper>
                 <Button
                   mt={0}
                   size="xs"
                   onClick={() => {
-                    navigator.clipboard.writeText(`<script src=\"https://prestimate.io/widget.js\" data-client-id=\"${userId}\"></script>`);
+                    navigator.clipboard.writeText(`<script src=\"https://prestimate-frontend.vercel.app/widget.js\" data-client-id=\"${userId}\"></script>`);
                   }}
                   variant="outline"
                 >
