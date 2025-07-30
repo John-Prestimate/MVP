@@ -2,7 +2,7 @@
   // Get config from script tag
   var scriptTag = document.currentScript;
   var customerId = scriptTag.getAttribute('data-customer');
-  var toolUrl = 'https://www.prestimate.io/Mapview/index.html?customer=' + encodeURIComponent(customerId);
+  var toolUrl = 'https://prestimate-frontend.vercel.app/embed?id=' + encodeURIComponent(customerId);
 
   //create button
   var btn = document.createElement('button');
