@@ -20,6 +20,29 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
     const timeout = setTimeout(() => {
       console.log("Still on register after 1s");
     }, 1000);
+    // Automation: On every mount, check for expired trial and block features if needed
+    async function checkTrialExpiry() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('created_at, subscription_active, subscription_tier')
+        .eq('id', user.id)
+        .single();
+      if (customer?.created_at && customer.subscription_active) {
+        const created = new Date(customer.created_at);
+        const now = new Date();
+        const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+        if (diffDays > 30 && customer.subscription_tier === 'Pro') {
+          // Block all features by setting subscription_active to false
+          await supabase
+            .from('customers')
+            .update({ subscription_active: false })
+            .eq('id', user.id);
+        }
+      }
+    }
+    checkTrialExpiry();
     return () => clearTimeout(timeout);
   }, []);
 

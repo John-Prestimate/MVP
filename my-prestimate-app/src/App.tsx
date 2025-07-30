@@ -7,6 +7,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { ShowUserId } from "./ShowUserId";
 import MapView from "./components/MapView";
 
+import EmbedInstructions from "./components/EmbedInstructions";
+
 function App() {
   return (
     <MantineProvider>
@@ -22,6 +24,7 @@ function App() {
               <Dashboard />
             </ProtectedRoute>
           } />
+          <Route path="/embed-instructions" element={<EmbedInstructions />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
