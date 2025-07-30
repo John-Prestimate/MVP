@@ -1,6 +1,10 @@
 # Prestimate Widget – BACKEND TASKS
 
-## 📨 Supabase: Authentication
+## � Frontend: Embed Instructions Page
+- [x] Create centralized Embed Instructions page for prestimate.io covering major platforms and both embed methods (iframe, script) — 2025-07-29
+
+
+## �📨 Supabase: Authentication
 - [x] Enable Supabase Auth (email + password to start)
 - [x] Create `users` table (if not auto-generated)
 - [ ] Associate estimates with `user_id`
@@ -60,6 +64,8 @@
 # Discovered During Work
 - [ ] Implement AI-assisted detection for driveways and yards (future ML integration) — 2025-06-29
 - [ ] Consider integrating a cloud AI API for more accurate feature detection (future)
+
+- [ ] Add more platforms and update instructions as new website builders become popular (Embed Instructions page)
 
 # Added 2025-06-29
 - [ ] Pro tier: Add AI-assisted measuring for roof and house using OSM building polygons (MVP)

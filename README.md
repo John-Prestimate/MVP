@@ -2,6 +2,16 @@
 
 This is the minimum viable product (MVP) for **Prestimate**, a web-based drawing tool that allows service businesses to give rough estimates by tracing areas on a map.
 
+
+## 📄 Embed Instructions Page
+For detailed, platform-specific tutorials on embedding the Prestimate widget (WordPress, Wix, Squarespace, Shopify, Webflow, GoDaddy, and more), see:
+
+**`src/components/EmbedInstructions.tsx`**
+
+This React page covers both iframe and script embed methods, with step-by-step guides for each major website builder.
+
+To add this page to your app, import and route it as needed (e.g., `/embed-instructions`).
+
 ## Features
 
 - Draw and measure areas and lines on a map
