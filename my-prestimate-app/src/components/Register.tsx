@@ -33,6 +33,9 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
       const { error, data } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: "https://prestimate-frontend.vercel.app/dashboard"
+        }
       });
       console.log("[Register] signUp response", { error, data });
       setLoading(false);
