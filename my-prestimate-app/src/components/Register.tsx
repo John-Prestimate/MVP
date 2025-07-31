@@ -70,7 +70,7 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
           const { error: insertError } = await supabase
             .from('customers')
             .insert({
-              id: data.user.id,
+              auth_id: data.user.id, // Insert authenticated user's ID into auth_id column
               email,
               subscription_active: true,
               subscription_tier: 'Pro',
