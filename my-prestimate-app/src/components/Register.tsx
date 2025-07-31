@@ -65,7 +65,8 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
       if (error) {
         setError(error.message);
       } else {
-        // After registration, insert customer record for trial automation
+        // Customer creation is now handled by a database trigger. The frontend no longer inserts into customers directly.
+        /*
         if (data?.user?.id) {
           const { error: insertError } = await supabase
             .from('customers')
@@ -81,6 +82,7 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
             return;
           }
         }
+        */
         setSuccess("Registration successful! Check your email for a confirmation link.");
         if (onRegistered) onRegistered();
       }
