@@ -65,7 +65,22 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
       if (error) {
         setError(error.message);
       } else {
-        // Wait for user to confirm email and login before creating business_settings
+        // After registration, insert customer record for trial automation
+        if (data?.user?.id) {
+          const { error: insertError } = await supabase
+            .from('customers')
+            .insert({
+              id: data.user.id,
+              email,
+              subscription_active: true,
+              subscription_tier: 'Pro',
+              created_at: new Date().toISOString()
+            });
+          if (insertError) {
+            setError("Registration succeeded, but failed to create customer record: " + insertError.message);
+            return;
+          }
+        }
         setSuccess("Registration successful! Check your email for a confirmation link.");
         if (onRegistered) onRegistered();
       }
