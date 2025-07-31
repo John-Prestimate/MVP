@@ -51,10 +51,12 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
     setError(null);
     setSuccess(null);
     setLoading(true);
-    console.log("[Register] Attempting sign up", { email, password });
+    // Normalize email before sign up
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log("[Register] Attempting sign up", { email: normalizedEmail, password });
     try {
       const { error, data } = await supabase.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
         options: {
           emailRedirectTo: "https://prestimate-frontend.vercel.app/dashboard"
@@ -72,7 +74,7 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
             .from('customers')
             .insert({
               auth_id: data.user.id, // Insert authenticated user's ID into auth_id column
-              email,
+              email: normalizedEmail,
               subscription_active: true,
               subscription_tier: 'Pro',
               created_at: new Date().toISOString()
