@@ -67,23 +67,37 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
       if (error) {
         setError(error.message);
       } else {
-        // After successful registration, update the customers table to set auth_id for the row with the matching stripe_customer_id (or email as fallback).
+        // After successful registration, check for a customer row with this email and a non-null stripe_customer_id
         if (data?.user?.id) {
-          // Try to find the customer by email (if stripe_customer_id is not available at this point)
-          // Reason: Stripe customer may have been created before registration, so we link them now.
           const { data: customer, error: customerError } = await supabase
             .from('customers')
             .select('id, stripe_customer_id, auth_id, email')
-            .or(`email.eq.${normalizedEmail}`)
+            .eq('email', normalizedEmail)
+            .not('stripe_customer_id', 'is', null)
             .maybeSingle();
-          if (customer && !customer.auth_id) {
-            // Update the customer row to set auth_id
+          if (customer) {
+            // Update the customer row to set auth_id and any other info
             const { error: updateError } = await supabase
               .from('customers')
               .update({ auth_id: data.user.id })
               .eq('id', customer.id);
             if (updateError) {
               setError("Registration succeeded, but failed to link customer record: " + updateError.message);
+              return;
+            }
+          } else {
+            // No such customer row exists, so insert a new customer
+            const { error: insertError } = await supabase
+              .from('customers')
+              .insert({
+                auth_id: data.user.id,
+                email: normalizedEmail,
+                subscription_active: true,
+                subscription_tier: 'Pro',
+                created_at: new Date().toISOString()
+              });
+            if (insertError) {
+              setError("Registration succeeded, but failed to create customer record: " + insertError.message);
               return;
             }
           }
