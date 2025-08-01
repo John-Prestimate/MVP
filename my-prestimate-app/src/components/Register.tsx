@@ -67,24 +67,27 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
       if (error) {
         setError(error.message);
       } else {
-        // Customer creation is now handled by a database trigger. The frontend no longer inserts into customers directly.
-        /*
+        // After successful registration, update the customers table to set auth_id for the row with the matching stripe_customer_id (or email as fallback).
         if (data?.user?.id) {
-          const { error: insertError } = await supabase
+          // Try to find the customer by email (if stripe_customer_id is not available at this point)
+          // Reason: Stripe customer may have been created before registration, so we link them now.
+          const { data: customer, error: customerError } = await supabase
             .from('customers')
-            .insert({
-              auth_id: data.user.id, // Insert authenticated user's ID into auth_id column
-              email: normalizedEmail,
-              subscription_active: true,
-              subscription_tier: 'Pro',
-              created_at: new Date().toISOString()
-            });
-          if (insertError) {
-            setError("Registration succeeded, but failed to create customer record: " + insertError.message);
-            return;
+            .select('id, stripe_customer_id, auth_id, email')
+            .or(`email.eq.${normalizedEmail}`)
+            .maybeSingle();
+          if (customer && !customer.auth_id) {
+            // Update the customer row to set auth_id
+            const { error: updateError } = await supabase
+              .from('customers')
+              .update({ auth_id: data.user.id })
+              .eq('id', customer.id);
+            if (updateError) {
+              setError("Registration succeeded, but failed to link customer record: " + updateError.message);
+              return;
+            }
           }
         }
-        */
         setSuccess("Registration successful! Check your email for a confirmation link.");
         if (onRegistered) onRegistered();
       }
