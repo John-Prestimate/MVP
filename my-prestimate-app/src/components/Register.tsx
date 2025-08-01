@@ -67,9 +67,8 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
       if (error) {
         setError(error.message);
       } else {
-        // After successful registration, always check for any customer row with this email
+        // After successful registration, always update by email first, only insert if no row was updated
         if (data?.user?.id) {
-          // Use a transaction-like approach to avoid race conditions
           // 1. Try to update any customer row with this email
           const { error: updateError, count } = await supabase
             .from('customers')
