@@ -20,25 +20,23 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
     const timeout = setTimeout(() => {
       console.log("Still on register after 1s");
     }, 1000);
-    // Automation: On every mount, check for expired trial and block features if needed
     async function checkTrialExpiry() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data: customer } = await supabase
         .from('customers')
         .select('created_at, subscription_active, subscription_tier')
-        .eq('id', user.id)
+        .eq('auth_id', user.id)
         .single();
       if (customer?.created_at && customer.subscription_active) {
         const created = new Date(customer.created_at);
         const now = new Date();
         const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
         if (diffDays > 30 && customer.subscription_tier === 'Pro') {
-          // Block all features by setting subscription_active to false
           await supabase
             .from('customers')
             .update({ subscription_active: false })
-            .eq('id', user.id);
+            .eq('auth_id', user.id);
         }
       }
     }
@@ -51,9 +49,8 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
     setError(null);
     setSuccess(null);
     setLoading(true);
-    // Normalize email before sign up
+
     const normalizedEmail = email.trim().toLowerCase();
-    console.log("[Register] Attempting sign up", { email: normalizedEmail, password });
     try {
       const { error, data } = await supabase.auth.signUp({
         email: normalizedEmail,
@@ -62,30 +59,50 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
           emailRedirectTo: "https://prestimate-frontend.vercel.app/dashboard"
         }
       });
-      console.log("[Register] signUp response", { error, data });
       setLoading(false);
       if (error) {
         setError(error.message);
-      } else {
-        // After successful registration, always update by email first, only insert if no row was updated
-        if (data?.user?.id) {
-          // 1. Try to update any customer row with this email
-          const { error: updateError, count } = await supabase
+        return;
+      }
+
+      if (data?.user?.id) {
+        // 1. Try to claim Stripe-created row with auth_id IS NULL
+        const { error: claimError, count: claimCount } = await supabase
+          .from('customers')
+          .update({
+            auth_id: data.user.id,
+            subscription_active: true,
+            subscription_tier: 'Pro',
+            email: normalizedEmail,
+            name: data.user.user_metadata?.name || null,
+          }, { count: 'exact' })
+          .eq('email', normalizedEmail)
+          .is('auth_id', null);
+
+        if (claimError) {
+          setError("Registration succeeded, but failed to link Stripe customer record: " + claimError.message);
+          return;
+        }
+
+        // 2. If no Stripe row claimed, try to update own row (by auth_id)
+        if (claimCount === 0) {
+          const { error: updateError, count: updateCount } = await supabase
             .from('customers')
             .update({
-              auth_id: data.user.id,
-              email: normalizedEmail,
               subscription_active: true,
               subscription_tier: 'Pro',
-              // Optionally update other fields as needed
+              email: normalizedEmail,
+              name: data.user.user_metadata?.name || null,
             }, { count: 'exact' })
-            .eq('email', normalizedEmail);
+            .eq('auth_id', data.user.id);
+
           if (updateError) {
-            setError("Registration succeeded, but failed to link customer record: " + updateError.message);
+            setError("Registration succeeded, but failed to update customer record: " + updateError.message);
             return;
           }
-          // 2. If no row was updated, insert a new customer row
-          if (count === 0) {
+
+          // 3. If no row updated, insert a new customer row
+          if (updateCount === 0) {
             const { error: insertError } = await supabase
               .from('customers')
               .insert({
@@ -93,7 +110,8 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
                 email: normalizedEmail,
                 subscription_active: true,
                 subscription_tier: 'Pro',
-                created_at: new Date().toISOString()
+                created_at: new Date().toISOString(),
+                name: data.user.user_metadata?.name || null,
               });
             if (insertError) {
               setError("Registration succeeded, but failed to create customer record: " + insertError.message);
@@ -119,7 +137,6 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
     }
   };
 
-  console.log("Rendering Register form");
   return (
     <div style={{ maxWidth: 350, margin: "60px auto", padding: 24, border: "1px solid #e0e7ef", borderRadius: 8, background: "#fff" }}>
       <h2>Sign Up for Prestimate</h2>
