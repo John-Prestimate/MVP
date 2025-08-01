@@ -67,26 +67,26 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
       if (error) {
         setError(error.message);
       } else {
-        // After successful registration, check for a customer row with this email and a non-null stripe_customer_id
+        // After successful registration, always check for any customer row with this email
         if (data?.user?.id) {
-          const { data: customer, error: customerError } = await supabase
+          // Use a transaction-like approach to avoid race conditions
+          // 1. Try to update any customer row with this email
+          const { error: updateError, count } = await supabase
             .from('customers')
-            .select('id, stripe_customer_id, auth_id, email')
-            .eq('email', normalizedEmail)
-            .not('stripe_customer_id', 'is', null)
-            .maybeSingle();
-          if (customer) {
-            // Update the customer row to set auth_id and any other info
-            const { error: updateError } = await supabase
-              .from('customers')
-              .update({ auth_id: data.user.id })
-              .eq('id', customer.id);
-            if (updateError) {
-              setError("Registration succeeded, but failed to link customer record: " + updateError.message);
-              return;
-            }
-          } else {
-            // No such customer row exists, so insert a new customer
+            .update({
+              auth_id: data.user.id,
+              email: normalizedEmail,
+              subscription_active: true,
+              subscription_tier: 'Pro',
+              // Optionally update other fields as needed
+            }, { count: 'exact' })
+            .eq('email', normalizedEmail);
+          if (updateError) {
+            setError("Registration succeeded, but failed to link customer record: " + updateError.message);
+            return;
+          }
+          // 2. If no row was updated, insert a new customer row
+          if (count === 0) {
             const { error: insertError } = await supabase
               .from('customers')
               .insert({
