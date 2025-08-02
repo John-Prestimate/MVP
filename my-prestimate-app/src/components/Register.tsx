@@ -65,7 +65,7 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
       }
 
       if (data?.user?.id) {
-        // 1. Try to update any row with this email (claim Stripe or existing row)
+        // 1. Try to update any row with this email (case-insensitive)
         const { error: updateError, count: updateCount } = await supabase
           .from('customers')
           .update({
@@ -75,15 +75,32 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
             email: normalizedEmail,
             name: data.user.user_metadata?.name || null,
           }, { count: 'exact' })
-          .eq('email', normalizedEmail);
+          .ilike('email', normalizedEmail);
 
         if (updateError) {
           setError("Database error saving new user: " + updateError.message);
           return;
         }
 
-        // 2. If no row was updated, insert a new one
+        // 2. If no row was updated, check for existing row (case-insensitive)
         if (updateCount === 0) {
+          const { data: existing, error: selectError } = await supabase
+            .from('customers')
+            .select('id')
+            .ilike('email', normalizedEmail);
+
+          if (selectError) {
+            setError("Database error checking for existing user: " + selectError.message);
+            return;
+          }
+
+          if (existing && existing.length > 0) {
+            // Edge case: row exists but wasn't updated (shouldn't happen, but handle gracefully)
+            setError("A user with this email already exists. Please log in or reset your password.");
+            return;
+          }
+
+          // 3. Safe to insert new customer
           const { error: insertError } = await supabase
             .from('customers')
             .insert({
