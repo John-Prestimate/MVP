@@ -78,7 +78,7 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
           .eq('email', normalizedEmail);
 
         if (updateError) {
-          setError("Registration succeeded, but failed to link customer record: " + updateError.message);
+          setError("Database error saving new user: " + updateError.message);
           return;
         }
 
@@ -95,7 +95,7 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
               name: data.user.user_metadata?.name || null,
             });
           if (insertError) {
-            setError("Registration succeeded, but failed to create customer record: " + insertError.message);
+            setError("Database error saving new user: " + insertError.message);
             return;
           }
         }
