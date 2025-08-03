@@ -65,57 +65,20 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
       }
 
       if (data?.user?.id) {
-        // 1. Try to update any row with this email (case-insensitive)
-        const { error: updateError, count: updateCount } = await supabase
-          .from('customers')
-          .update({
-            auth_id: data.user.id,
-            subscription_active: true,
-            subscription_tier: 'Pro',
-            email: normalizedEmail,
-            name: data.user.user_metadata?.name || null,
-          }, { count: 'exact' })
-          .ilike('email', normalizedEmail);
+        // Use the database helper to upsert customer atomically
+        const { data: upserted, error: upsertError } = await supabase.rpc('upsert_customer', {
+          p_email: normalizedEmail,
+          p_auth_id: data.user.id,
+          p_name: data.user.user_metadata?.name || null,
+          p_subscription_active: true,
+          p_subscription_tier: 'Pro'
+        });
 
-        if (updateError) {
-          setError("Database error saving new user: " + updateError.message);
+        if (upsertError) {
+          setError("Database error saving new user: " + upsertError.message);
           return;
         }
 
-        // 2. If no row was updated, check for existing row (case-insensitive)
-        if (updateCount === 0) {
-          const { data: existing, error: selectError } = await supabase
-            .from('customers')
-            .select('id')
-            .ilike('email', normalizedEmail);
-
-          if (selectError) {
-            setError("Database error checking for existing user: " + selectError.message);
-            return;
-          }
-
-          if (existing && existing.length > 0) {
-            // Edge case: row exists but wasn't updated (shouldn't happen, but handle gracefully)
-            setError("A user with this email already exists. Please log in or reset your password.");
-            return;
-          }
-
-          // 3. Safe to insert new customer
-          const { error: insertError } = await supabase
-            .from('customers')
-            .insert({
-              auth_id: data.user.id,
-              email: normalizedEmail,
-              subscription_active: true,
-              subscription_tier: 'Pro',
-              created_at: new Date().toISOString(),
-              name: data.user.user_metadata?.name || null,
-            });
-          if (insertError) {
-            setError("Database error saving new user: " + insertError.message);
-            return;
-          }
-        }
         setSuccess("Registration successful! Check your email for a confirmation link.");
         if (onRegistered) onRegistered();
       }
