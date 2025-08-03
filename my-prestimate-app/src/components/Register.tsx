@@ -66,7 +66,7 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
 
       if (data?.user?.id) {
         // Use the database helper to upsert customer atomically
-        const { data: upserted, error: upsertError } = await supabase.rpc('upsert_customer', {
+        const { error: upsertError } = await supabase.rpc('upsert_customer', {
           p_email: normalizedEmail,
           p_auth_id: data.user.id,
           p_name: data.user.user_metadata?.name || null,
