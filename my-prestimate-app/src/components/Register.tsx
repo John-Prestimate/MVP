@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 
@@ -15,34 +15,6 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
   const [success, setSuccess] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      console.log("Still on register after 1s");
-    }, 1000);
-    async function checkTrialExpiry() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: customer } = await supabase
-        .from('customers')
-        .select('created_at, subscription_active, subscription_tier')
-        .eq('auth_id', user.id)
-        .single();
-      if (customer?.created_at && customer.subscription_active) {
-        const created = new Date(customer.created_at);
-        const now = new Date();
-        const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
-        if (diffDays > 30 && customer.subscription_tier === 'Pro') {
-          await supabase
-            .from('customers')
-            .update({ subscription_active: false })
-            .eq('auth_id', user.id);
-        }
-      }
-    }
-    checkTrialExpiry();
-    return () => clearTimeout(timeout);
-  }, []);
-
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -51,12 +23,11 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
 
     const normalizedEmail = email.trim().toLowerCase();
     try {
+      // 1. Register the user with Supabase Auth
       const { error, data } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
-        options: {
-          emailRedirectTo: "https://prestimate-frontend.vercel.app/dashboard"
-        }
+        options: { emailRedirectTo: "https://prestimate-frontend.vercel.app/dashboard" }
       });
       setLoading(false);
       if (error) {
@@ -64,8 +35,10 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
         return;
       }
 
+      // 2. Only now, create the customer record with the Supabase Auth ID
       if (data?.user?.id) {
-        // Add retry logic for upsert
+        const trialStart = new Date().toISOString();
+        const trialExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
         let attempts = 0;
         let upsertError = null;
         while (attempts < 3) {
@@ -74,7 +47,9 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
             p_auth_id: data.user.id,
             p_name: data.user.user_metadata?.name || null,
             p_subscription_active: true,
-            p_subscription_tier: 'Pro'
+            p_subscription_tier: 'Trial', // Start as Trial
+            p_trial_start: trialStart,
+            p_trial_expiry: trialExpiry
           });
           if (!tryError) {
             upsertError = null;
@@ -94,7 +69,6 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
           setError("Database error saving new user: " + upsertError.message);
           return;
         }
-
         setSuccess("Registration successful! Check your email for a confirmation link.");
         if (onRegistered) onRegistered();
       }
@@ -114,7 +88,14 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
   };
 
   return (
-    <div style={{ maxWidth: 350, margin: "60px auto", padding: 24, border: "1px solid #e0e7ef", borderRadius: 8, background: "#fff" }}>
+    <div style={{
+      maxWidth: 350,
+      margin: "60px auto",
+      padding: 24,
+      border: "1px solid #e0e7ef",
+      borderRadius: 8,
+      background: "#fff"
+    }}>
       <h2>Sign Up for Prestimate</h2>
       <form onSubmit={handleRegister}>
         <div style={{ marginBottom: 12 }}>
@@ -137,7 +118,19 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
             style={{ width: "100%", padding: 8, fontSize: 16 }}
           />
         </div>
-        <button type="submit" disabled={loading} style={{ width: "100%", padding: 10, fontSize: 16, background: "#0b80ff", color: "#fff", border: "none", borderRadius: 4 }}>
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            width: "100%",
+            padding: 10,
+            fontSize: 16,
+            background: "#0b80ff",
+            color: "#fff",
+            border: "none",
+            borderRadius: 4
+          }}
+        >
           {loading ? "Signing up..." : "Sign Up"}
         </button>
       </form>
@@ -146,7 +139,13 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
       <div style={{ textAlign: "center", marginTop: 18 }}>
         <button
           onClick={handleBackToLogin}
-          style={{ background: "none", color: "#0b80ff", border: "none", cursor: "pointer", textDecoration: "underline" }}
+          style={{
+            background: "none",
+            color: "#0b80ff",
+            border: "none",
+            cursor: "pointer",
+            textDecoration: "underline"
+          }}
         >
           Back to Login
         </button>
