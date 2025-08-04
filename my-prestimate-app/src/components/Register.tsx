@@ -69,6 +69,24 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
           setError("Database error saving new user: " + upsertError.message);
           return;
         }
+
+        // --- Send onboarding email automatically ---
+        try {
+          const embedInstructions = `\n<div id=\"prestimate-widget\"></div>\n<script src=\"https://prestimate.io/widget.js\" data-user=\"${data.user.id}\"></script>\n`;
+          await fetch('https://stripe-webhook-vercel-hazel.vercel.app/api/send-onboarding-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: normalizedEmail,
+              customerId: data.user.id,
+              dashboardUrl: 'https://prestimate-frontend.vercel.app/',
+              embedInstructions,
+            }),
+          });
+        } catch (err) {
+          console.error('Failed to send onboarding email:', err);
+        }
+
         setSuccess("Registration successful! Check your email for a confirmation link.");
         if (onRegistered) onRegistered();
       }
