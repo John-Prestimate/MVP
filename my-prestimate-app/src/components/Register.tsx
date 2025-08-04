@@ -65,15 +65,31 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
       }
 
       if (data?.user?.id) {
-        // Use the database helper to upsert customer atomically
-        const { error: upsertError } = await supabase.rpc('upsert_customer', {
-          p_email: normalizedEmail,
-          p_auth_id: data.user.id,
-          p_name: data.user.user_metadata?.name || null,
-          p_subscription_active: true,
-          p_subscription_tier: 'Pro'
-        });
-
+        // Add retry logic for upsert
+        let attempts = 0;
+        let upsertError = null;
+        while (attempts < 3) {
+          const { error: tryError } = await supabase.rpc('upsert_customer', {
+            p_email: normalizedEmail,
+            p_auth_id: data.user.id,
+            p_name: data.user.user_metadata?.name || null,
+            p_subscription_active: true,
+            p_subscription_tier: 'Pro'
+          });
+          if (!tryError) {
+            upsertError = null;
+            break;
+          }
+          // Check for duplicate key error
+          if (tryError.message && tryError.message.includes('duplicate key value violates unique constraint')) {
+            attempts++;
+            await new Promise(res => setTimeout(res, 500 * attempts)); // Wait longer each time
+            continue;
+          } else {
+            upsertError = tryError;
+            break;
+          }
+        }
         if (upsertError) {
           setError("Database error saving new user: " + upsertError.message);
           return;
