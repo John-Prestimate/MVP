@@ -139,7 +139,7 @@ function BusinessSettings() {
       // Upload to Supabase Storage (bucket: 'logos', path: userId/filename)
       const fileExt = logoFile.name.split('.').pop();
       const filePath = `${userId}/logo.${fileExt}`;
-      const { data, error: uploadError } = await supabase.storage.from('logos').upload(filePath, logoFile, { upsert: true });
+      const { error: uploadError } = await supabase.storage.from('logos').upload(filePath, logoFile, { upsert: true });
       if (uploadError) throw uploadError;
       // Get public URL
       const { data: publicUrlData } = supabase.storage.from('logos').getPublicUrl(filePath);

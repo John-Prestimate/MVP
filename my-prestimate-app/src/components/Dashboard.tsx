@@ -84,14 +84,15 @@ const Dashboard = () => {
   }, []);
 
   // Helper: trial status
-  function isTrialActive() {
-    if (!customer || !customer.created_at) return false;
+  function trialInfo() {
+    if (!customer || !customer.created_at) return { isTrial: false, trialDaysLeft: 0 };
     const created = new Date(customer.created_at);
     const now = new Date();
     const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
-    return diffDays <= 30;
+    const trialDaysLeft = Math.max(0, 30 - Math.floor(diffDays));
+    return { isTrial: diffDays <= 30, trialDaysLeft };
   }
-  const isTrial = isTrialActive();
+  const { isTrial, trialDaysLeft } = trialInfo();
   const isSubscriptionActive = customer && customer.subscription_active === true;
   const trialEnded = customer && !isTrial && !isSubscriptionActive;
 
@@ -349,7 +350,7 @@ const Dashboard = () => {
         {/* Main Content */}
         <Box style={{ flex: 1, maxWidth: 600 }}>
           <Stack gap="lg">
-            {/* --- Trial Ended Message & Upgrade Options --- */}
+            {/* --- Trial Ended & Trial Nearing End Message & Upgrade Options --- */}
             {loadingCustomer ? (
               <Text>Loading subscription status...</Text>
             ) : trialEnded ? (
@@ -361,10 +362,27 @@ const Dashboard = () => {
                   To continue using Prestimate, please upgrade to a paid plan below. All features are currently blocked.
                 </Text>
                 <Group>
-                  <Button color="blue" variant="filled" onClick={() => {/* TODO: Add Pro upgrade logic */}}>
+                  <Button color="blue" variant="filled" component="a" href="https://buy.stripe.com/test_8wM8yQ7wA7gQeRa6oo" target="_blank">
                     Upgrade to Pro
                   </Button>
-                  <Button color="gray" variant="outline" onClick={() => {/* TODO: Add Basic upgrade logic */}}>
+                  <Button color="gray" variant="outline" component="a" href="https://buy.stripe.com/test_3cs7vQ7wA7gQeRa7op" target="_blank">
+                    Choose Basic Plan
+                  </Button>
+                </Group>
+              </Paper>
+            ) : isTrial && trialDaysLeft <= 5 ? (
+              <Paper shadow="xs" p="md" mb="md" style={{ background: '#e6f7ff', border: '1px solid #91d5ff' }}>
+                <Title order={4}>
+                  <Text color="#1890ff" span>Your free trial ends in {trialDaysLeft} day{trialDaysLeft === 1 ? '' : 's'}</Text>
+                </Title>
+                <Text color="#1890ff" mb="sm">
+                  To avoid interruption, please upgrade to a paid plan below.
+                </Text>
+                <Group>
+                  <Button color="blue" variant="filled" component="a" href="https://buy.stripe.com/test_8wM8yQ7wA7gQeRa6oo" target="_blank">
+                    Upgrade to Pro
+                  </Button>
+                  <Button color="gray" variant="outline" component="a" href="https://buy.stripe.com/test_3cs7vQ7wA7gQeRa7op" target="_blank">
                     Choose Basic Plan
                   </Button>
                 </Group>

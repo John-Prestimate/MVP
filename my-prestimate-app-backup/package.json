@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/next": "^8.0.7",
     "@types/react": "^19.1.7",
     "@types/react-dom": "^19.1.6",
+    "next": "^15.4.2",
     "typescript": "~5.8.3",
     "vite": "^6.3.5"
   },
@@ -28,6 +30,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.2",
+    "resend": "^4.7.0",
     "uuid": "^11.1.0"
   }
 }

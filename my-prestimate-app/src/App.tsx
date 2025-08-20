@@ -6,6 +6,7 @@ import Dashboard from "./components/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { ShowUserId } from "./ShowUserId";
 import MapView from "./components/MapView";
+import SignUp from "./components/SignUp";
 
 import EmbedInstructions from "./components/EmbedInstructions";
 
@@ -19,6 +20,7 @@ function App() {
           <Route path="/Mapview" element={<MapView />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+            <Route path="/signup" element={<SignUp />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />

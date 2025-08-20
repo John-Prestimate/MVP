@@ -1,19 +1,22 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { ShowUserId } from "./ShowUserId"; // <--- Add this import
+import { ShowUserId } from "./ShowUserId";
+import MapView from "./components/MapView";
+
+import EmbedInstructions from "./components/EmbedInstructions";
 
 function App() {
   return (
     <MantineProvider>
       <Router>
-        {/* ShowUserId runs on every route for debugging */}
         <ShowUserId />
         <Routes>
+          <Route path="/" element={<MapView />} />
+          <Route path="/Mapview" element={<MapView />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={
@@ -21,7 +24,8 @@ function App() {
               <Dashboard />
             </ProtectedRoute>
           } />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="/embed-instructions" element={<EmbedInstructions />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </MantineProvider>

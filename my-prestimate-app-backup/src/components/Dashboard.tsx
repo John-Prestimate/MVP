@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -17,6 +17,7 @@ import {
 import { fetchServices, addService, updateService, deleteService } from "../api/services";
 import { supabase } from "../supabaseClient";
 import { ensureBusinessSettings } from "../api/ensureBusinessSettings";
+import EstimateUsageDashboard from './EstimateUsageDashboard';
 
 // Type for a service
 export type Service = {
@@ -61,6 +62,38 @@ const Dashboard = () => {
   const [industry, setIndustry] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  // --- Subscription status logic ---
+  const [customer, setCustomer] = useState<any>(null);
+  const [loadingCustomer, setLoadingCustomer] = useState(true);
+  useEffect(() => {
+    async function fetchCustomer() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoadingCustomer(false);
+        return;
+      }
+      const { data } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      setCustomer(data);
+      setLoadingCustomer(false);
+    }
+    fetchCustomer();
+  }, []);
+
+  // Helper: trial status
+  function isTrialActive() {
+    if (!customer || !customer.created_at) return false;
+    const created = new Date(customer.created_at);
+    const now = new Date();
+    const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays <= 30;
+  }
+  const isTrial = isTrialActive();
+  const isSubscriptionActive = customer && customer.subscription_active === true;
+  const trialEnded = customer && !isTrial && !isSubscriptionActive;
 
   // Load company info and logo
   useEffect(() => {
@@ -302,6 +335,8 @@ const Dashboard = () => {
               Upload Logo
             </Button>
             <Divider my="sm" />
+            {/* Estimate usage for business user */}
+            {userId && <EstimateUsageDashboard userId={userId} />}
             <Button variant="filled" color="green" onClick={handleSaveCompanyInfo}>
               Save Company Info
             </Button>
@@ -314,6 +349,27 @@ const Dashboard = () => {
         {/* Main Content */}
         <Box style={{ flex: 1, maxWidth: 600 }}>
           <Stack gap="lg">
+            {/* --- Trial Ended Message & Upgrade Options --- */}
+            {loadingCustomer ? (
+              <Text>Loading subscription status...</Text>
+            ) : trialEnded ? (
+              <Paper shadow="xs" p="md" mb="md" style={{ background: '#fffbe6', border: '1px solid #ffe58f' }}>
+                <Title order={4}>
+                  <Text color="#d48806" span>Your free trial has ended</Text>
+                </Title>
+                <Text color="#d48806" mb="sm">
+                  To continue using Prestimate, please upgrade to a paid plan below. All features are currently blocked.
+                </Text>
+                <Group>
+                  <Button color="blue" variant="filled" onClick={() => {/* TODO: Add Pro upgrade logic */}}>
+                    Upgrade to Pro
+                  </Button>
+                  <Button color="gray" variant="outline" onClick={() => {/* TODO: Add Basic upgrade logic */}}>
+                    Choose Basic Plan
+                  </Button>
+                </Group>
+              </Paper>
+            ) : null}
             <Title order={4}>Manage Services</Title>
             <Group gap="xs">
               <TextInput
@@ -390,6 +446,47 @@ const Dashboard = () => {
                   min={0}
                   prefix="$"
                 />
+              </Paper>
+            )}
+            {/* --- Widget Embed Instructions Section --- */}
+            {userId && (
+              <Paper shadow="xs" p="md" mb="md" style={{ background: '#f8f9fa' }}>
+                <Title order={5} mb="xs">Widget Embed Instructions</Title>
+                <Text mb="xs">
+                  You can embed the Prestimate measuring tool using either method below. For full platform-specific tutorials, see <a href="https://prestimate.io/how-to-embed" target="_blank" rel="noopener noreferrer">How to Embed</a>.
+                </Text>
+                <Text fw={500} mt="sm">1. Iframe Embed (Recommended)</Text>
+                <Paper withBorder p="sm" style={{ background: '#fff', fontFamily: 'monospace', fontSize: 14, wordBreak: 'break-all', marginBottom: 8 }}>
+                  {`<iframe src="https://prestimate-frontend.vercel.app/embed?id=${userId}" width="100%" height="600" style="border:none;"></iframe>`}
+                </Paper>
+                <Button
+                  mt={0}
+                  size="xs"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`<iframe src=\"https://prestimate-frontend.vercel.app/embed?id=${userId}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>`);
+                  }}
+                  variant="outline"
+                  style={{ marginBottom: 12 }}
+                >
+                  Copy Iframe Code
+                </Button>
+                <Text fw={500} mt="sm">2. Script Embed (Advanced/custom use)</Text>
+                <Paper withBorder p="sm" style={{ background: '#fff', fontFamily: 'monospace', fontSize: 14, wordBreak: 'break-all', marginBottom: 8 }}>
+                  {`<script src="https://prestimate-frontend.vercel.app/widget.js" data-customer="${userId}"></script>`}
+                </Paper>
+                <Button
+                  mt={0}
+                  size="xs"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`<script src=\"https://prestimate-frontend.vercel.app/widget.js\" data-customer=\"${userId}\"></script>`);
+                  }}
+                  variant="outline"
+                >
+                  Copy Script Code
+                </Button>
+                <Text mt="md" size="sm" color="dimmed">
+                  For step-by-step guides for WordPress, Wix, Squarespace, Shopify, Webflow, GoDaddy, and more, visit <a href="https://prestimate.io/how-to-embed" target="_blank" rel="noopener noreferrer">prestimate.io/how-to-embed</a>.
+                </Text>
               </Paper>
             )}
             {error && <Text style={{ color: "red" }}>{error}</Text>}
