@@ -44,6 +44,47 @@ const defaultServices: Omit<Service, "base_price">[] = [
 ];
 
 const Dashboard = () => {
+  // Ensure business profile and customer row exist after login
+  useEffect(() => {
+    async function ensureProfile() {
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("[Dashboard] Current user:", user);
+      if (!user) {
+        console.log("[Dashboard] No authenticated user. Skipping profile insert.");
+        return;
+      }
+      const userId = user.id;
+
+      // Check business_settings
+      const { data: existing, error: fetchError } = await supabase
+        .from("business_settings")
+        .select("user_id")
+        .eq("user_id", userId)
+        .single();
+      if (fetchError && fetchError.code !== "PGRST116") return;
+      if (!existing) {
+        console.log("[Dashboard] Inserting business_settings for user:", userId);
+        await supabase
+          .from("business_settings")
+          .insert({ user_id: userId, company_name: companyName });
+      }
+
+      // Check customers
+      const { data: customerRow, error: customerFetchError } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("id", userId)
+        .single();
+      if (customerFetchError && customerFetchError.code !== "PGRST116") return;
+      if (!customerRow) {
+        console.log("[Dashboard] Inserting customers row for user:", userId);
+        await supabase
+          .from("customers")
+          .insert({ id: userId, created_at: new Date().toISOString(), subscription_active: false });
+      }
+    }
+    ensureProfile();
+  }, [companyName]);
   // Service states
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState<string | null>(null);
