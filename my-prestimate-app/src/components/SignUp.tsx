@@ -25,35 +25,22 @@ const SignUp = () => {
         },
       });
       if (signUpError) throw signUpError;
+      // Only send onboarding email if userId is available (no email confirmation required)
       const userId = data.user?.id;
-      if (!userId) throw new Error("User ID not returned");
-
-      // 2. Add to business_settings
-      const { error: settingsError } = await supabase
-        .from("business_settings")
-        .insert({ user_id: userId, company_name: companyName });
-      if (settingsError) throw settingsError;
-
-      // 3. Add to customers table and start trial
-      const { error: customerError } = await supabase
-        .from("customers")
-        .insert({ id: userId, created_at: new Date().toISOString(), subscription_active: false });
-      if (customerError) throw customerError;
-
-      // 4. Send onboarding email via API
-      const dashboardUrl = `${window.location.origin}/dashboard`;
-      const embedInstructions = `<iframe src=\"https://prestimate-frontend.vercel.app/embed?id=${userId}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>`;
-      await fetch("/api/send-onboarding-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          customerId: userId,
-          dashboardUrl,
-          embedInstructions,
-        }),
-      });
-
+      if (userId) {
+        const dashboardUrl = `${window.location.origin}/dashboard`;
+        const embedInstructions = `<iframe src=\"https://prestimate-frontend.vercel.app/embed?id=${userId}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>`;
+        await fetch("/api/send-onboarding-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            customerId: userId,
+            dashboardUrl,
+            embedInstructions,
+          }),
+        });
+      }
       setSuccess(true);
     } catch (e: any) {
       setError(e.message || String(e));
