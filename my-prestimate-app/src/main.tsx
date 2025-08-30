@@ -1,14 +1,26 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import DemoMapPage from './DemoMapPage';
 import { MantineProvider } from '@mantine/core';
 import App from './App';
-import './style.css'; // Optional, only if you want to keep styling
-import '@mantine/core/styles.css';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <MantineProvider>
-      <App />
-    </MantineProvider>
-  </React.StrictMode>
-);
+const path = window.location.pathname;
+const rootElement = document.getElementById('root');
+const root = ReactDOM.createRoot(rootElement!);
+
+if (path === '/demo-map') {
+  root.render(
+    <React.StrictMode>
+      <DemoMapPage />
+    </React.StrictMode>
+  );
+} else {
+  root.render(
+    <React.StrictMode>
+      <MantineProvider>
+        <App />
+      </MantineProvider>
+    </React.StrictMode>
+  );
+}

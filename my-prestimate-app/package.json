@@ -10,8 +10,8 @@
   },
   "devDependencies": {
     "@types/next": "^8.0.7",
-    "@types/react": "^19.1.7",
-    "@types/react-dom": "^19.1.6",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
     "next": "^15.4.2",
     "typescript": "~5.8.3",
     "vite": "^6.3.5"
@@ -27,8 +27,8 @@
     "framer-motion": "^12.18.1",
     "ol": "^10.5.0",
     "osmtogeojson": "^3.0.0-beta.5",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "react-router-dom": "^7.6.2",
     "resend": "^4.7.0",
     "uuid": "^11.1.0"

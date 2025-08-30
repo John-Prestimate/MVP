@@ -44,6 +44,15 @@ const defaultServices: Omit<Service, "base_price">[] = [
 ];
 
 const Dashboard = () => {
+  // Company info states
+  const [companyName, setCompanyName] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+
   // Ensure business profile and customer row exist after login
   useEffect(() => {
     async function ensureProfile() {
@@ -94,15 +103,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
-
-  // Company info states
-  const [companyName, setCompanyName] = useState("");
-  const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [industry, setIndustry] = useState("");
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [logoFile, setLogoFile] = useState<File | null>(null);
   // --- Subscription status logic ---
   const [customer, setCustomer] = useState<any>(null);
   const [loadingCustomer, setLoadingCustomer] = useState(true);
