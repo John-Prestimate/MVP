@@ -1,3 +1,4 @@
+import { fromLonLat } from 'ol/proj';
 import React, { useEffect, useRef, useState } from 'react';
 import 'ol/ol.css';
 import Map from 'ol/Map';
@@ -5,9 +6,12 @@ import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
-import { fromLonLat } from 'ol/proj';
-import { Draw } from 'ol/interaction';
-import { Fill, Stroke, Style } from 'ol/style';
+
+import OSM from 'ol/source/OSM';
+import Draw from 'ol/interaction/Draw';
+import Style from 'ol/style/Style';
+import Fill from 'ol/style/Fill';
+import Stroke from 'ol/style/Stroke';
 
 const DEMO_CENTER = fromLonLat([-98.5795, 39.8283]); // Center of USA
 
@@ -23,7 +27,7 @@ const DemoMapView: React.FC = () => {
   useEffect(() => {
     if (mapRef.current || !mapDivRef.current) return;
     const tileLayer = new TileLayer({
-      source: new (require('ol/source/OSM').default)(),
+      source: new OSM(),
     });
     const vectorLayer = new VectorLayer({
       source: vectorSourceRef.current,
