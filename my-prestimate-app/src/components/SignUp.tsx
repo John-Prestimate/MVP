@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
-import { useNavigate } from "react-router-dom";
-import { Box, Button, TextInput, Title, Paper, Stack, Text, PasswordInput } from "@mantine/core";
+// import { useNavigate } from "react-router-dom";
+import { Box, Button, TextInput, Title, Paper, Text, PasswordInput } from "@mantine/core";
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
@@ -10,7 +10,7 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // Removed unused variable
 
   // Example sign-up handler (replace with your actual logic)
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -22,7 +22,7 @@ const SignUp = () => {
     (async () => {
       try {
         // Insert customer into Supabase 'customers' table
-        const { data: customerData, error: customerError } = await supabase
+  const { error: customerError } = await supabase // Removed unused customerData
           .from('customers')
           .insert([{ email, company_name: companyName }])
           .select();
@@ -111,7 +111,7 @@ const SignUp = () => {
               type="email"
               required
               value={email}
-              onChange={e => setEmail(e.currentTarget.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.currentTarget.value)}
               size="xl"
               styles={{
                 input: {
@@ -134,22 +134,21 @@ const SignUp = () => {
               label="Password"
               required
               value={password}
-              onChange={e => setPassword(e.currentTarget.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               size="xl"
               styles={{
                 input: {
-                  fontSize: 20,
-                  padding: '18px',
-                  borderRadius: 16,
-                  boxShadow: '0 2px 8px rgba(45,127,249,0.06)',
-                  border: '1px solid #dbeafe',
-                  background: '#f8fafc',
+                  fontSize: 18,
+                  padding: "18px 16px",
+                  borderRadius: 12,
+                  boxShadow: "0 2px 8px rgba(45,127,249,0.06)",
+                  border: "1px solid #e0e6ed",
+                  background: "#f8fafc",
                 },
                 label: {
-                  fontSize: 18,
-                  marginBottom: 6,
-                  color: '#213547',
                   fontWeight: 600,
+                  fontSize: 18,
+                  marginBottom: 8,
                 },
               }}
             />
@@ -157,7 +156,7 @@ const SignUp = () => {
               label="Company Name"
               required
               value={companyName}
-              onChange={e => setCompanyName(e.currentTarget.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompanyName(e.target.value)}
               size="xl"
               styles={{
                 input: {
