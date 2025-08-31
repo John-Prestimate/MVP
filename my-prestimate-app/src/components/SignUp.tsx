@@ -93,16 +93,21 @@ const SignUp = () => {
     >
       <Paper
         shadow="xl"
-        p={32}
+        p={48}
         style={{
-          maxWidth: 480,
+          maxWidth: 700,
           width: '100%',
-          borderRadius: 24,
-          boxShadow: '0 4px 32px rgba(0,0,0,0.10)',
+          borderRadius: 32,
+          boxShadow: '0 8px 48px rgba(0,0,0,0.12)',
           background: '#fff',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 700,
         }}
       >
-        <Stack gap={24}>
+        <Stack gap={32} style={{ width: '100%', maxWidth: 540, alignItems: 'center' }}>
           <Title order={2} style={{ fontSize: 32, textAlign: 'center', color: '#213547', marginBottom: 8 }}>
             Sign Up for Prestimate
           </Title>
