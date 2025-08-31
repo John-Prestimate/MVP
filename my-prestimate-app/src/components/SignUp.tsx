@@ -74,23 +74,23 @@ const SignUp = () => {
         shadow="xl"
         p={48}
         style={{
-          maxWidth: 700,
+          maxWidth: 420,
           width: '100%',
           borderRadius: 32,
-          boxShadow: '0 8px 48px rgba(0,0,0,0.12)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.10)',
           background: '#fff',
-          minHeight: 700,
+          minHeight: 520,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexDirection: 'column',
         }}
       >
-        <Title order={2} style={{ fontSize: 32, textAlign: 'center', color: '#213547', marginBottom: 8 }}>
+  <Title order={2} style={{ fontSize: 32, textAlign: 'center', color: '#213547', marginBottom: 16 }}>
           Sign Up for Prestimate
         </Title>
         {success ? (
-          <Text color="green" style={{ fontSize: 20, textAlign: 'center' }}>
+          <Text color="green" style={{ fontSize: 20, textAlign: 'center', marginBottom: 8 }}>
             Sign up successful! Please check your email for a secure link to activate your account and access your dashboard.
           </Text>
         ) : (
@@ -101,84 +101,106 @@ const SignUp = () => {
               alignItems: 'center',
               justifyContent: 'center',
               width: '100%',
-              maxWidth: 440,
-              gap: 28,
+              gap: 24,
+              marginTop: 8,
             }}
             onSubmit={handleSubmit}
           >
-            <Stack gap={28} style={{ width: '100%' }}>
-              <TextInput
-                label={<span style={{ fontSize: 18, color: '#213547' }}>Email</span>}
-                type="email"
-                required
-                value={email}
-                onChange={e => setEmail(e.currentTarget.value)}
-                size="lg"
-                styles={{
-                  input: {
-                    fontSize: 18,
-                    padding: '14px',
-                  },
-                  label: {
-                    fontSize: 18,
-                  },
-                }}
-              />
-              <PasswordInput
-                label={<span style={{ fontSize: 18, color: '#213547' }}>Password</span>}
-                required
-                value={password}
-                onChange={e => setPassword(e.currentTarget.value)}
-                size="lg"
-                styles={{
-                  input: {
-                    fontSize: 18,
-                    padding: '14px',
-                  },
-                  label: {
-                    fontSize: 18,
-                  },
-                }}
-              />
-              <TextInput
-                label={<span style={{ fontSize: 18, color: '#213547' }}>Company Name</span>}
-                required
-                value={companyName}
-                onChange={e => setCompanyName(e.currentTarget.value)}
-                size="lg"
-                styles={{
-                  input: {
-                    fontSize: 18,
-                    padding: '14px',
-                  },
-                  label: {
-                    fontSize: 18,
-                  },
-                }}
-              />
-              <Button
-                type="submit"
-                size="xl"
-                fullWidth
-                loading={loading}
-                style={{
-                  fontSize: 22,
-                  padding: '16px 0',
-                  borderRadius: 12,
-                  background: '#2d7ff9',
-                  color: '#fff',
+            <TextInput
+              label="Email"
+              type="email"
+              required
+              value={email}
+              onChange={e => setEmail(e.currentTarget.value)}
+              size="xl"
+              styles={{
+                input: {
+                  fontSize: 20,
+                  padding: '18px',
+                  borderRadius: 16,
+                  boxShadow: '0 2px 8px rgba(45,127,249,0.06)',
+                  border: '1px solid #dbeafe',
+                  background: '#f8fafc',
+                },
+                label: {
+                  fontSize: 18,
+                  marginBottom: 6,
+                  color: '#213547',
                   fontWeight: 600,
+                },
+              }}
+            />
+            <PasswordInput
+              label="Password"
+              required
+              value={password}
+              onChange={e => setPassword(e.currentTarget.value)}
+              size="xl"
+              styles={{
+                input: {
+                  fontSize: 20,
+                  padding: '18px',
+                  borderRadius: 16,
+                  boxShadow: '0 2px 8px rgba(45,127,249,0.06)',
+                  border: '1px solid #dbeafe',
+                  background: '#f8fafc',
+                },
+                label: {
+                  fontSize: 18,
+                  marginBottom: 6,
+                  color: '#213547',
+                  fontWeight: 600,
+                },
+              }}
+            />
+            <TextInput
+              label="Company Name"
+              required
+              value={companyName}
+              onChange={e => setCompanyName(e.currentTarget.value)}
+              size="xl"
+              styles={{
+                input: {
+                  fontSize: 20,
+                  padding: '18px',
+                  borderRadius: 16,
+                  boxShadow: '0 2px 8px rgba(45,127,249,0.06)',
+                  border: '1px solid #dbeafe',
+                  background: '#f8fafc',
+                },
+                label: {
+                  fontSize: 18,
+                  marginBottom: 6,
+                  color: '#213547',
+                  fontWeight: 600,
+                },
+              }}
+            />
+            <Button
+              type="submit"
+              size="xl"
+              fullWidth
+              loading={loading}
+              styles={{
+                root: {
+                  fontSize: 22,
+                  padding: '18px 0',
+                  borderRadius: 16,
+                  background: '#2563eb',
+                  color: '#fff',
+                  fontWeight: 700,
                   marginTop: 8,
-                  boxShadow: '0 2px 8px rgba(45,127,249,0.08)',
-                }}
-                disabled={!email || !password || !companyName}
-              >
-                {loading ? 'Signing Up...' : 'Start Free Trial'}
-              </Button>
-              {error && (
-                <Text color="red" style={{ fontSize: 16, textAlign: 'center', marginTop: 8 }}>{error}</Text>
-              )}
-            </Stack>
+                  boxShadow: '0 2px 12px rgba(37,99,235,0.10)',
+                  transition: 'background 0.2s',
+                },
+              }}
+              disabled={!email || !password || !companyName}
+            >
+              {loading ? 'Signing Up...' : 'Start Free Trial'}
+            </Button>
+            {error && (
+              <Text color="red" style={{ fontSize: 16, textAlign: 'center', marginTop: 8 }}>{error}</Text>
+            )}
           </form>
         )}
       </Paper>
