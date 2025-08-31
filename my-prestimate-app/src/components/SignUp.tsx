@@ -118,8 +118,15 @@ const SignUp = () => {
                 onChange={e => setEmail(e.currentTarget.value)}
                 required
                 size="lg"
-                style={{ fontSize: 18 }}
-                inputProps={{ style: { fontSize: 18, padding: '14px' } }}
+                styles={{
+                  input: {
+                    fontSize: 18,
+                    padding: '14px',
+                  },
+                  label: {
+                    fontSize: 18,
+                  },
+                }}
               />
               <TextInput
                 label={<span style={{ fontSize: 18, color: '#213547' }}>Password</span>}
@@ -128,8 +135,15 @@ const SignUp = () => {
                 onChange={e => setPassword(e.currentTarget.value)}
                 required
                 size="lg"
-                style={{ fontSize: 18 }}
-                inputProps={{ style: { fontSize: 18, padding: '14px' } }}
+                styles={{
+                  input: {
+                    fontSize: 18,
+                    padding: '14px',
+                  },
+                  label: {
+                    fontSize: 18,
+                  },
+                }}
               />
               <TextInput
                 label={<span style={{ fontSize: 18, color: '#213547' }}>Company Name</span>}
@@ -137,8 +151,15 @@ const SignUp = () => {
                 onChange={e => setCompanyName(e.currentTarget.value)}
                 required
                 size="lg"
-                style={{ fontSize: 18 }}
-                inputProps={{ style: { fontSize: 18, padding: '14px' } }}
+                styles={{
+                  input: {
+                    fontSize: 18,
+                    padding: '14px',
+                  },
+                  label: {
+                    fontSize: 18,
+                  },
+                }}
               />
               <Button
                 onClick={handleSignUp}
