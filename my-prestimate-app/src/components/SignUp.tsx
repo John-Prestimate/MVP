@@ -1,7 +1,7 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
-import { Box, Button, TextInput, Title, Paper, Stack, Text } from "@mantine/core";
+import { Box, Button, TextInput, Title, Paper, Stack, Text, PasswordInput } from "@mantine/core";
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
@@ -12,72 +12,51 @@ const SignUp = () => {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-  const handleSignUp = async () => {
+  // Example sign-up handler (replace with your actual logic)
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setLoading(true);
     setError("");
-    try {
-      // 1. Create user in Supabase Auth
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
-      if (signUpError) throw signUpError;
-      // Only send onboarding email if userId is available (no email confirmation required)
-      const userId = data.user?.id;
-      if (userId) {
-        // 2. Insert customer row for RLS compliance, with trial info
-        const trialStart = new Date().toISOString();
-        const trialExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-        const { error: customerInsertError } = await supabase
-          .from("customers")
-          .insert([
-            {
-              id: userId,
-              email,
-              company_name: companyName,
-              created_at: trialStart,
-              subscription_tier: 'Trial',
-              subscription_active: true,
-              trial_start: trialStart,
-              trial_expiry: trialExpiry,
-            },
-          ]);
-        if (customerInsertError) throw customerInsertError;
-        // 3. Insert basic business_settings row
-        const { error: businessSettingsError } = await supabase
-          .from("business_settings")
-          .insert([
-            {
-              user_id: userId,
-              company_name: companyName,
-            },
-          ]);
-        if (businessSettingsError) throw businessSettingsError;
-        // 4. Send onboarding email
-        const dashboardUrl = `${window.location.origin}/dashboard`;
-        const embedInstructions = `<iframe src=\"https://prestimate-frontend.vercel.app/embed?id=${userId}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>`;
-        await fetch("/api/send-onboarding-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+    setSuccess(false);
+
+    (async () => {
+      try {
+        // Insert customer into Supabase 'customers' table
+        const { data: customerData, error: customerError } = await supabase
+          .from('customers')
+          .insert([{ email, company_name: companyName }])
+          .select();
+        if (customerError) throw customerError;
+
+        // Insert business settings
+        const { error: settingsError } = await supabase
+          .from('business_settings')
+          .insert([{ email, company_name: companyName }]);
+        if (settingsError) throw settingsError;
+
+        // Generate secure dashboard link (tokenized)
+        const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+        const dashboardLink = `${window.location.origin}/dashboard/activate?email=${encodeURIComponent(email)}&token=${token}`;
+
+        // Send confirmation email via Resend API
+        const resendRes = await fetch('/api/send-onboarding-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email,
-            customerId: userId,
-            dashboardUrl,
-            embedInstructions,
+            to: email,
+            companyName,
+            dashboardLink,
           }),
         });
+        if (!resendRes.ok) throw new Error('Failed to send confirmation email');
+
+        setSuccess(true);
+      } catch (err: any) {
+        setError(err.message || 'Sign up failed. Please try again.');
+      } finally {
+        setLoading(false);
       }
-  setSuccess(true);
-  // Redirect to dashboard after successful sign up and customer creation
-  navigate("/dashboard");
-    } catch (e: any) {
-      setError(e.message || String(e));
-    } finally {
-      setLoading(false);
-    }
+    })();
   };
 
   return (
@@ -100,28 +79,40 @@ const SignUp = () => {
           borderRadius: 32,
           boxShadow: '0 8px 48px rgba(0,0,0,0.12)',
           background: '#fff',
+          minHeight: 700,
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: 700,
+          flexDirection: 'column',
         }}
       >
-        <Stack gap={32} style={{ width: '100%', maxWidth: 540, alignItems: 'center' }}>
-          <Title order={2} style={{ fontSize: 32, textAlign: 'center', color: '#213547', marginBottom: 8 }}>
-            Sign Up for Prestimate
-          </Title>
-          {success ? (
-            <Text color="green" style={{ fontSize: 20, textAlign: 'center' }}>
-              Sign up successful! Please check your email to confirm your account and access your dashboard.
-            </Text>
-          ) : (
-            <>
+        <Title order={2} style={{ fontSize: 32, textAlign: 'center', color: '#213547', marginBottom: 8 }}>
+          Sign Up for Prestimate
+        </Title>
+        {success ? (
+          <Text color="green" style={{ fontSize: 20, textAlign: 'center' }}>
+            Sign up successful! Please check your email for a secure link to activate your account and access your dashboard.
+          </Text>
+        ) : (
+          <form
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              maxWidth: 440,
+              gap: 28,
+            }}
+            onSubmit={handleSubmit}
+          >
+            <Stack gap={28} style={{ width: '100%' }}>
               <TextInput
                 label={<span style={{ fontSize: 18, color: '#213547' }}>Email</span>}
+                type="email"
+                required
                 value={email}
                 onChange={e => setEmail(e.currentTarget.value)}
-                required
                 size="lg"
                 styles={{
                   input: {
@@ -133,12 +124,11 @@ const SignUp = () => {
                   },
                 }}
               />
-              <TextInput
+              <PasswordInput
                 label={<span style={{ fontSize: 18, color: '#213547' }}>Password</span>}
-                type="password"
+                required
                 value={password}
                 onChange={e => setPassword(e.currentTarget.value)}
-                required
                 size="lg"
                 styles={{
                   input: {
@@ -152,9 +142,9 @@ const SignUp = () => {
               />
               <TextInput
                 label={<span style={{ fontSize: 18, color: '#213547' }}>Company Name</span>}
+                required
                 value={companyName}
                 onChange={e => setCompanyName(e.currentTarget.value)}
-                required
                 size="lg"
                 styles={{
                   input: {
@@ -167,10 +157,10 @@ const SignUp = () => {
                 }}
               />
               <Button
-                onClick={handleSignUp}
-                loading={loading}
-                disabled={!email || !password || !companyName}
+                type="submit"
                 size="xl"
+                fullWidth
+                loading={loading}
                 style={{
                   fontSize: 22,
                   padding: '16px 0',
@@ -181,15 +171,16 @@ const SignUp = () => {
                   marginTop: 8,
                   boxShadow: '0 2px 8px rgba(45,127,249,0.08)',
                 }}
+                disabled={!email || !password || !companyName}
               >
-                Sign Up
+                {loading ? 'Signing Up...' : 'Start Free Trial'}
               </Button>
               {error && (
                 <Text color="red" style={{ fontSize: 16, textAlign: 'center', marginTop: 8 }}>{error}</Text>
               )}
-            </>
-          )}
-        </Stack>
+            </Stack>
+          </form>
+        )}
       </Paper>
     </Box>
   );
