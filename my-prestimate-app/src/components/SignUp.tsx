@@ -9,45 +9,41 @@ const SignUp = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     setSuccess(false);
 
-    (async () => {
-      try {
-        // Insert customer into Supabase 'customers' table (no company_name)
-        const { error: customerError } = await supabase
-          .from('customers')
-          .insert([{ email }])
-          .select();
-        if (customerError) throw customerError;
+    try {
+      // Step 1: Create user in Supabase Auth
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (signUpError) throw signUpError;
 
-        // Optionally: Insert business settings after dashboard setup, not here
+      // Step 2: Generate dashboard activation link
+      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      const dashboardLink = `${window.location.origin}/dashboard/activate?email=${encodeURIComponent(email)}&token=${token}`;
 
-        // Generate secure dashboard link (tokenized)
-        const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
-        const dashboardLink = `${window.location.origin}/dashboard/activate?email=${encodeURIComponent(email)}&token=${token}`;
+      // Step 3: Send onboarding/activation email
+      const resendRes = await fetch('/api/send-onboarding-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: email,
+          dashboardLink,
+        }),
+      });
+      if (!resendRes.ok) throw new Error('Failed to send confirmation email');
 
-        // Send confirmation email via Resend API
-        const resendRes = await fetch('/api/send-onboarding-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: email,
-            dashboardLink,
-          }),
-        });
-        if (!resendRes.ok) throw new Error('Failed to send confirmation email');
-
-        setSuccess(true);
-      } catch (err: any) {
-        setError(err.message || 'Sign up failed. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    })();
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err.message || 'Sign up failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
