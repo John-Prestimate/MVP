@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
-// import { useNavigate } from "react-router-dom";
-import { Box, Button, TextInput, Title, Paper, Text, PasswordInput } from "@mantine/core";
+import { Box, Button, TextInput, Title, Paper, Text } from "@mantine/core";
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
@@ -10,9 +9,7 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  // const navigate = useNavigate(); // Removed unused variable
 
-  // Example sign-up handler (replace with your actual logic)
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -22,7 +19,7 @@ const SignUp = () => {
     (async () => {
       try {
         // Insert customer into Supabase 'customers' table
-  const { error: customerError } = await supabase // Removed unused customerData
+        const { error: customerError } = await supabase
           .from('customers')
           .insert([{ email, company_name: companyName }])
           .select();
@@ -86,7 +83,7 @@ const SignUp = () => {
           flexDirection: 'column',
         }}
       >
-  <Title order={2} style={{ fontSize: 32, textAlign: 'center', color: '#213547', marginBottom: 16 }}>
+        <Title order={2} style={{ fontSize: 32, textAlign: 'center', color: '#213547', marginBottom: 16 }}>
           Sign Up for Prestimate
         </Title>
         {success ? (
@@ -111,7 +108,7 @@ const SignUp = () => {
               type="email"
               required
               value={email}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.currentTarget.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               size="xl"
               styles={{
                 input: {
@@ -130,25 +127,27 @@ const SignUp = () => {
                 },
               }}
             />
-            <PasswordInput
+            <TextInput
               label="Password"
+              type="password"
               required
               value={password}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               size="xl"
               styles={{
                 input: {
-                  fontSize: 18,
-                  padding: "18px 16px",
-                  borderRadius: 12,
-                  boxShadow: "0 2px 8px rgba(45,127,249,0.06)",
-                  border: "1px solid #e0e6ed",
-                  background: "#f8fafc",
+                  fontSize: 20,
+                  padding: '18px',
+                  borderRadius: 16,
+                  boxShadow: '0 2px 8px rgba(45,127,249,0.06)',
+                  border: '1px solid #dbeafe',
+                  background: '#f8fafc',
                 },
                 label: {
-                  fontWeight: 600,
                   fontSize: 18,
-                  marginBottom: 8,
+                  marginBottom: 6,
+                  color: '#213547',
+                  fontWeight: 600,
                 },
               }}
             />
