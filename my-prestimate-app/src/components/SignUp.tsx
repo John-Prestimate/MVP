@@ -5,7 +5,6 @@ import { Box, Button, TextInput, Title, Paper, Text } from "@mantine/core";
 const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [companyName, setCompanyName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -18,18 +17,14 @@ const SignUp = () => {
 
     (async () => {
       try {
-        // Insert customer into Supabase 'customers' table
+        // Insert customer into Supabase 'customers' table (no company_name)
         const { error: customerError } = await supabase
           .from('customers')
-          .insert([{ email, company_name: companyName }])
+          .insert([{ email }])
           .select();
         if (customerError) throw customerError;
 
-        // Insert business settings
-        const { error: settingsError } = await supabase
-          .from('business_settings')
-          .insert([{ email, company_name: companyName }]);
-        if (settingsError) throw settingsError;
+        // Optionally: Insert business settings after dashboard setup, not here
 
         // Generate secure dashboard link (tokenized)
         const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -41,7 +36,6 @@ const SignUp = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             to: email,
-            companyName,
             dashboardLink,
           }),
         });
@@ -76,7 +70,7 @@ const SignUp = () => {
           borderRadius: 32,
           boxShadow: '0 8px 32px rgba(0,0,0,0.10)',
           background: '#fff',
-          minHeight: 520,
+          minHeight: 400,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -151,29 +145,6 @@ const SignUp = () => {
                 },
               }}
             />
-            <TextInput
-              label="Company Name"
-              required
-              value={companyName}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompanyName(e.target.value)}
-              size="xl"
-              styles={{
-                input: {
-                  fontSize: 20,
-                  padding: '18px',
-                  borderRadius: 16,
-                  boxShadow: '0 2px 8px rgba(45,127,249,0.06)',
-                  border: '1px solid #dbeafe',
-                  background: '#f8fafc',
-                },
-                label: {
-                  fontSize: 18,
-                  marginBottom: 6,
-                  color: '#213547',
-                  fontWeight: 600,
-                },
-              }}
-            />
             <Button
               type="submit"
               size="xl"
@@ -192,7 +163,7 @@ const SignUp = () => {
                   transition: 'background 0.2s',
                 },
               }}
-              disabled={!email || !password || !companyName}
+              disabled={!email || !password}
             >
               {loading ? 'Signing Up...' : 'Start Free Trial'}
             </Button>
