@@ -16,18 +16,18 @@ const SignUp = () => {
     setSuccess(false);
 
     try {
-      // Step 1: Create user in Supabase Auth
+      // 1. Sign up the user using Supabase Auth, do NOT insert into any tables yet
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });
       if (signUpError) throw signUpError;
 
-      // Step 2: Generate dashboard activation link
+      // 2. Generate dashboard activation link
       const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
       const dashboardLink = `${window.location.origin}/dashboard/activate?email=${encodeURIComponent(email)}&token=${token}`;
 
-      // Step 3: Send onboarding/activation email
+      // 3. Send confirmation email with the dashboard link
       const resendRes = await fetch('/api/send-onboarding-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
