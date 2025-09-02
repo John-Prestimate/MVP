@@ -20,7 +20,7 @@ const SignUp = ({ onBackToLogin }: SignUpProps) => {
     setSuccess(false);
 
     try {
-      // 1. Sign up the user using Supabase Auth, do NOT insert into any tables yet
+  // 1. Sign up the user using Supabase Auth
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
