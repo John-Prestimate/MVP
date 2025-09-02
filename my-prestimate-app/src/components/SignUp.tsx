@@ -1,8 +1,12 @@
 import React, { useState } from "react";
+
+type SignUpProps = {
+  onBackToLogin?: () => void;
+};
 import { supabase } from "../supabaseClient";
 import { Box, Button, TextInput, Title, Paper, Text } from "@mantine/core";
 
-const SignUp = () => {
+const SignUp = ({ onBackToLogin }: SignUpProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -169,6 +173,18 @@ const SignUp = () => {
             {error && (
               <Text color="red" style={{ fontSize: 16, textAlign: 'center', marginTop: 8 }}>{error}</Text>
             )}
+            <div style={{ textAlign: "center", marginTop: 18 }}>
+              {onBackToLogin && (
+                <Button
+                  variant="subtle"
+                  color="blue"
+                  onClick={onBackToLogin}
+                  style={{ background: "none", color: "#2563eb", textDecoration: "underline", fontSize: 16 }}
+                >
+                  Back to Login
+                </Button>
+              )}
+            </div>
           </form>
         )}
       </Paper>
