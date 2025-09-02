@@ -36,7 +36,8 @@ const SignUp = () => {
           dashboardLink,
         }),
       });
-      if (!resendRes.ok) throw new Error('Failed to send confirmation email');
+      const result = await resendRes.json();
+      if (!resendRes.ok || !result.success) throw new Error('Failed to send confirmation email');
 
       setSuccess(true);
     } catch (err: any) {
