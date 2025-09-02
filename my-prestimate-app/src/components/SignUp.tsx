@@ -28,12 +28,14 @@ const SignUp = () => {
       const dashboardLink = `${window.location.origin}/dashboard/activate?email=${encodeURIComponent(email)}&token=${token}`;
 
       // 3. Send confirmation email with the dashboard link
+      const embedInstructions = `<iframe src="https://prestimate-frontend.vercel.app/embed?id=your-client-id" width="100%" height="600" style="border:none;"></iframe>\n<script src="https://prestimate-frontend.vercel.app/widget.js" data-customer="your-client-id"></script>`;
       const resendRes = await fetch('/api/send-onboarding-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to: email,
-          dashboardLink,
+          email,
+          dashboardUrl: dashboardLink,
+          embedInstructions,
         }),
       });
       const result = await resendRes.json();
