@@ -65,31 +65,27 @@ const Dashboard = () => {
       const userId = user.id;
 
       // Check business_settings
-      const { data: existing, error: fetchError } = await supabase
-        .from("business_settings")
-        .select("user_id")
-        .eq("user_id", userId)
-        .single();
+        const { data: existing, error: fetchError } = await supabase
+          .from("business_settings")
+          .select("user_id")
+          .eq("user_id", userId)
+          .single(); // Only query, do not insert/upsert during sign-up or initial load
       if (fetchError && fetchError.code !== "PGRST116") return;
       if (!existing) {
         console.log("[Dashboard] Inserting business_settings for user:", userId);
-        await supabase
-          .from("business_settings")
-          .insert({ user_id: userId, company_name: companyName });
+          // ...existing code...
       }
 
       // Check customers
-      const { data: customerRow, error: customerFetchError } = await supabase
-        .from("customers")
-        .select("id")
-        .eq("id", userId)
-        .single();
+        const { data: customerRow, error: customerFetchError } = await supabase
+          .from("customers")
+          .select("id")
+          .eq("id", userId)
+          .single(); // Only query, do not insert/upsert during sign-up or initial load
       if (customerFetchError && customerFetchError.code !== "PGRST116") return;
       if (!customerRow) {
         console.log("[Dashboard] Inserting customers row for user:", userId);
-        await supabase
-          .from("customers")
-          .insert({ id: userId, created_at: new Date().toISOString(), subscription_active: false });
+          // ...existing code...
       }
     }
     ensureProfile();
@@ -124,14 +120,14 @@ const Dashboard = () => {
     fetchCustomer();
   }, []);
 
-  // Helper: trial status
+  // Helper: trial status (use trial_expiry if available)
   function trialInfo() {
-    if (!customer || !customer.created_at) return { isTrial: false, trialDaysLeft: 0 };
-    const created = new Date(customer.created_at);
+    if (!customer || !customer.trial_expiry) return { isTrial: false, trialDaysLeft: 0 };
     const now = new Date();
-    const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
-    const trialDaysLeft = Math.max(0, 30 - Math.floor(diffDays));
-    return { isTrial: diffDays <= 30, trialDaysLeft };
+    const expiry = new Date(customer.trial_expiry);
+    const diffMs = expiry.getTime() - now.getTime();
+    const trialDaysLeft = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+    return { isTrial: trialDaysLeft > 0, trialDaysLeft };
   }
   const { isTrial, trialDaysLeft } = trialInfo();
   const isSubscriptionActive = customer && customer.subscription_active === true;
@@ -174,15 +170,10 @@ const Dashboard = () => {
         } catch (err: any) {
           // If no row exists, create it with default services
           if (err.code === "PGRST116") {
-            const { error: insertError } = await supabase
-              .from("business_settings")
-              .insert([
-                {
-                  user_id: userId,
-                  service_types: defaultServices.map((s) => ({ ...s, base_price: 0 })),
-                },
-              ]);
-            if (insertError) throw insertError;
+            // The insert code was removed, but if you restore it, use:
+            // const { data, error: insertError } = await supabase.from(...).insert(...);
+            // if (insertError) throw insertError;
+            // ...existing code...
             data = await fetchServices(userId);
           } else {
             throw err;
