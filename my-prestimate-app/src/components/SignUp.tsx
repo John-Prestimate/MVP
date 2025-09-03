@@ -27,9 +27,9 @@ const SignUp = ({ onBackToLogin }: SignUpProps) => {
       });
       if (signUpError) throw signUpError;
 
-      // 2. Generate dashboard activation link
+      // 2. Generate dashboard activation link to customer dashboard
       const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
-      const dashboardLink = `${window.location.origin}/dashboard/activate?email=${encodeURIComponent(email)}&token=${token}`;
+      const dashboardLink = `${window.location.origin}/dashboard?email=${encodeURIComponent(email)}&token=${token}`;
 
       // 3. Send confirmation email with the dashboard link
       const embedInstructions = `<iframe src="https://prestimate-frontend.vercel.app/embed?id=your-client-id" width="100%" height="600" style="border:none;"></iframe>\n<script src="https://prestimate-frontend.vercel.app/widget.js" data-customer="your-client-id"></script>`;
@@ -42,8 +42,23 @@ const SignUp = ({ onBackToLogin }: SignUpProps) => {
           embedInstructions,
         }),
       });
-      const result = await resendRes.json();
-      if (!resendRes.ok || !result.success) throw new Error('Failed to send confirmation email');
+      let result: any = {};
+      try {
+        result = await resendRes.json();
+      } catch (jsonErr) {
+        // If response is not JSON, treat as error
+        throw new Error('Failed to send confirmation email');
+      }
+      if (!resendRes.ok || !result.success) {
+        // If email was sent (resendRes.ok), but result.success is missing, treat as success
+        if (resendRes.ok) {
+          setSuccess(true);
+        } else {
+          throw new Error('Failed to send confirmation email');
+        }
+      } else {
+        setSuccess(true);
+      }
 
       setSuccess(true);
     } catch (err: any) {
