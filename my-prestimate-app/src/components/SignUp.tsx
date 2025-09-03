@@ -21,45 +21,17 @@ const SignUp = ({ onBackToLogin }: SignUpProps) => {
 
     try {
       // 1. Sign up the user using Supabase Auth
-      const { error: signUpError, data } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard/activate?email=${encodeURIComponent(email)}`
+        }
       });
       if (signUpError) throw signUpError;
 
-      // 2. Generate dashboard activation link to customer dashboard
-      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
-      const dashboardLink = `${window.location.origin}/dashboard/activate?email=${encodeURIComponent(email)}&token=${token}`;
-
-      // 3. Send confirmation email with the dashboard link
-      const embedInstructions = `<iframe src=\"https://prestimate-frontend.vercel.app/embed?id=${data?.user?.id || 'your-client-id'}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>\n<script src=\"https://prestimate-frontend.vercel.app/widget.js\" data-customer=\"${data?.user?.id || 'your-client-id'}\"></script>`;
-      if (!success) { // Prevent double email send
-        const resendRes = await fetch('/api/send-onboarding-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email,
-            customerId: data?.user?.id || '',
-            dashboardUrl: dashboardLink,
-            embedInstructions,
-          }),
-        });
-        let result: any = {};
-        try {
-          result = await resendRes.json();
-        } catch (jsonErr) {
-          throw new Error('Failed to send confirmation email');
-        }
-        if (!resendRes.ok || !result.success) {
-          if (resendRes.ok) {
-            setSuccess(true);
-          } else {
-            throw new Error('Failed to send confirmation email');
-          }
-        } else {
-          setSuccess(true);
-        }
-      }
+      // Only rely on Supabase Auth confirmation email with correct redirect
+      setSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Sign up failed. Please try again.');
     } finally {
