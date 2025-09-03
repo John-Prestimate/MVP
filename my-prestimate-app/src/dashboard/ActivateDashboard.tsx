@@ -35,25 +35,25 @@ const ActivateDashboard: React.FC = () => {
         const { data: customerRows, error: customerError } = await supabase
           .from("customers")
           .select("id")
-          .eq("uid", uid)
+          .eq("auth_id", uid)
           .eq("email", email);
         if (customerError) throw customerError;
         if (customerRows.length === 0) {
           const { error: insertCustomerError } = await supabase
             .from("customers")
-            .insert([{ uid, email }]);
+            .insert([{ auth_id: uid, email }]);
           if (insertCustomerError) throw insertCustomerError;
         }
         // Check for existing business_settings
         const { data: settingsRows, error: settingsError } = await supabase
           .from("business_settings")
           .select("id")
-          .eq("uid", uid);
+          .eq("user_id", uid);
         if (settingsError) throw settingsError;
         if (settingsRows.length === 0) {
           const { error: insertSettingsError } = await supabase
             .from("business_settings")
-            .insert([{ uid, email }]);
+            .insert([{ user_id: uid, email }]);
           if (insertSettingsError) throw insertSettingsError;
         }
         setSuccess(true);
