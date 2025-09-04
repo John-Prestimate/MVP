@@ -39,10 +39,20 @@ const ActivateDashboard: React.FC = () => {
           .eq("email", email);
         if (customerError) throw customerError;
         if (customerRows.length === 0) {
+          const customerPayload = {
+            auth_id: uid,
+            email,
+            subscription_tier: "pro",
+            trial_start: new Date().toISOString()
+          };
+          console.log("Inserting customer:", customerPayload);
           const { error: insertCustomerError } = await supabase
             .from("customers")
-            .insert([{ auth_id: uid, email }]);
-          if (insertCustomerError) throw insertCustomerError;
+            .insert([customerPayload]);
+          if (insertCustomerError) {
+            console.error("Customer insert error:", insertCustomerError);
+            throw insertCustomerError;
+          }
         }
         // Check for existing business_settings
         const { data: settingsRows, error: settingsError } = await supabase
