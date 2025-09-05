@@ -61,10 +61,19 @@ const ActivateDashboard: React.FC = () => {
           .eq("user_id", uid);
         if (settingsError) throw settingsError;
         if (settingsRows.length === 0) {
-          const { error: insertSettingsError } = await supabase
+          const settingsPayload = {
+            user_id: uid,
+            email
+          };
+          console.log("Inserting business_settings:", settingsPayload);
+          const response = await supabase
             .from("business_settings")
-            .insert([{ user_id: uid, email }]);
-          if (insertSettingsError) throw insertSettingsError;
+            .insert([settingsPayload]);
+          if (response.error) {
+            console.error("business_settings insert error:", response.error);
+            console.error("Full response:", response);
+            throw response.error;
+          }
         }
         setSuccess(true);
       } catch (err: any) {
