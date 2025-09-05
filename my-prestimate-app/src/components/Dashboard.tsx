@@ -1,19 +1,6 @@
 import { useEffect, useState } from "react";
-import {
-  Box,
-  Button,
-  Group,
-  Select,
-  Text,
-  TextInput,
-  Title,
-  Paper,
-  Stack,
-  Divider,
-  NumberInput,
-  FileInput,
-  Text as MantineText,
-} from "@mantine/core";
+import styles from "./Dashboard.module.css";
+// ...existing code...
 import { fetchServices, addService, updateService, deleteService } from "../api/services";
 import { supabase } from "../supabaseClient";
 import { ensureBusinessSettings } from "../api/ensureBusinessSettings";
@@ -306,244 +293,125 @@ const Dashboard = () => {
   const selected = services.find((s: Service) => s.key === selectedService);
 
   return (
-    <>
-      {/* Show logo at the top if it exists */}
+    <div className={styles["dashboard-wrapper"]}>
       {logoUrl && (
-        <div style={{ width: '100%', textAlign: 'center', marginBottom: 24 }}>
-          <img src={logoUrl} alt="Company Logo" style={{ maxHeight: 100, maxWidth: 220, objectFit: 'contain' }} />
+        <div style={{ width: "100%", textAlign: "center", marginBottom: 24 }}>
+          <img src={logoUrl} alt="Company Logo" style={{ maxHeight: 100, maxWidth: 220, objectFit: "contain" }} />
         </div>
       )}
-      <Group align="flex-start" gap="xl" style={{ padding: 32 }}>
-        {/* Sidebar */}
-        <Paper shadow="xs" p="md" style={{ minWidth: 280 }}>
-          <Stack gap="md">
-            <Title order={4}>Company Name</Title>
-            <TextInput
-              label="Company Name"
-              placeholder="Your company"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.currentTarget.value)}
-            />
-            <TextInput
-              label="Address"
-              placeholder="123 Main St"
-              value={address}
-              onChange={(e) => setAddress(e.currentTarget.value)}
-            />
-            <TextInput
-              label="Phone #"
-              placeholder="(555) 123-4567"
-              value={phone}
-              onChange={(e) => setPhone(e.currentTarget.value)}
-            />
-            <TextInput
-              label="Email"
-              placeholder="company@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.currentTarget.value)}
-            />
-            <TextInput
-              label="Service Industry"
-              placeholder="e.g., Cleaning"
-              value={industry}
-              onChange={(e) => setIndustry(e.currentTarget.value)}
-            />
-            {/* Logo upload */}
-            <FileInput
-              label="Company Logo"
-              placeholder="Upload logo"
-              accept="image/*"
-              value={logoFile}
-              onChange={setLogoFile}
-            />
-            <MantineText size="xs" color="dimmed">
-              Recommended: PNG or JPEG, approx. <b>300×100px</b>, under <b>500 KB</b>. The smaller the file size, the better for users.
-            </MantineText>
-            <Button
-              onClick={handleLogoUpload}
-              disabled={!logoFile}
-              variant="light"
-              color="indigo"
-            >
-              Upload Logo
-            </Button>
-            <Divider my="sm" />
-            {/* Estimate usage for business user */}
-            {userId && <EstimateUsageDashboard userId={userId} />}
-            <Button variant="filled" color="green" onClick={handleSaveCompanyInfo}>
-              Save Company Info
-            </Button>
-            <Button variant="outline" color="blue" onClick={() => {}}>
-              Change Password
-            </Button>
-          </Stack>
-        </Paper>
-
-        {/* Main Content */}
-        <Box style={{ flex: 1, maxWidth: 600 }}>
-          <Stack gap="lg">
+      <div className={styles["dashboard-main"]}>
+        <div style={{ display: "flex", gap: "32px", alignItems: "flex-start" }}>
+          {/* Sidebar */}
+          <div className={styles["dashboard-card"]} style={{ minWidth: 280, maxWidth: 340 }}>
+            <div className={styles["dashboard-section"]}>
+              <div className={styles["dashboard-title"]}>Company Profile</div>
+              <label className={styles["dashboard-label"]}>Company Name</label>
+              <input className={styles["dashboard-input"]} value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Your company" />
+              <label className={styles["dashboard-label"]}>Address</label>
+              <input className={styles["dashboard-input"]} value={address} onChange={e => setAddress(e.target.value)} placeholder="123 Main St" />
+              <label className={styles["dashboard-label"]}>Phone #</label>
+              <input className={styles["dashboard-input"]} value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 123-4567" />
+              <label className={styles["dashboard-label"]}>Email</label>
+              <input className={styles["dashboard-input"]} value={email} onChange={e => setEmail(e.target.value)} placeholder="company@email.com" />
+              <label className={styles["dashboard-label"]}>Service Industry</label>
+              <input className={styles["dashboard-input"]} value={industry} onChange={e => setIndustry(e.target.value)} placeholder="e.g., Cleaning" />
+              <label className={styles["dashboard-label"]}>Company Logo</label>
+              <input className={styles["dashboard-input"]} type="file" accept="image/*" onChange={e => setLogoFile(e.target.files?.[0] ?? null)} />
+              <div style={{ fontSize: "0.9rem", color: "#888", marginBottom: 8 }}>
+                Recommended: PNG or JPEG, approx. <b>300×100px</b>, under <b>500 KB</b>.
+              </div>
+              <button className={styles["dashboard-button"]} onClick={handleLogoUpload} disabled={!logoFile}>Upload Logo</button>
+              <div style={{ margin: "16px 0" }}>
+                {userId && <EstimateUsageDashboard userId={userId} />}
+              </div>
+              <button className={styles["dashboard-button"]} style={{ background: "#22c55e", color: "#fff" }} onClick={handleSaveCompanyInfo}>Save Company Info</button>
+              <button className={styles["dashboard-button"]} style={{ background: "#6366f1", color: "#fff" }} onClick={() => {}}>Change Password</button>
+            </div>
+          </div>
+          {/* Main Content */}
+          <div className={styles["dashboard-card"]} style={{ flex: 1, maxWidth: 600 }}>
             {/* --- Trial Ended & Trial Nearing End Message & Upgrade Options --- */}
             {loadingCustomer ? (
-              <Text>Loading subscription status...</Text>
+              <div>Loading subscription status...</div>
             ) : trialEnded ? (
-              <Paper shadow="xs" p="md" mb="md" style={{ background: '#fffbe6', border: '1px solid #ffe58f' }}>
-                <Title order={4}>
-                  <Text color="#d48806" span>Your free trial has ended</Text>
-                </Title>
-                <Text color="#d48806" mb="sm">
-                  To continue using Prestimate, please upgrade to a paid plan below. All features are currently blocked.
-                </Text>
-                <Group>
-                  <Button color="blue" variant="filled" component="a" href="https://buy.stripe.com/test_8wM8yQ7wA7gQeRa6oo" target="_blank">
-                    Upgrade to Pro
-                  </Button>
-                  <Button color="gray" variant="outline" component="a" href="https://buy.stripe.com/test_3cs7vQ7wA7gQeRa7op" target="_blank">
-                    Choose Basic Plan
-                  </Button>
-                </Group>
-              </Paper>
+              <div style={{ background: "#fffbe6", border: "1px solid #ffe58f", borderRadius: 16, padding: 16, marginBottom: 16 }}>
+                <div style={{ color: "#d48806", fontWeight: 700, fontSize: "1.1rem" }}>Your free trial has ended</div>
+                <div style={{ color: "#d48806", marginBottom: 8 }}>To continue using Prestimate, please upgrade to a paid plan below. All features are currently blocked.</div>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <a href="https://buy.stripe.com/test_8wM8yQ7wA7gQeRa6oo" target="_blank" rel="noopener noreferrer" className={styles["dashboard-button"]} style={{ background: "#6366f1" }}>Upgrade to Pro</a>
+                  <a href="https://buy.stripe.com/test_3cs7vQ7wA7gQeRa7op" target="_blank" rel="noopener noreferrer" className={styles["dashboard-button"]} style={{ background: "#7B5AF7" }}>Choose Basic Plan</a>
+                </div>
+              </div>
             ) : isTrial && trialDaysLeft <= 5 ? (
-              <Paper shadow="xs" p="md" mb="md" style={{ background: '#e6f7ff', border: '1px solid #91d5ff' }}>
-                <Title order={4}>
-                  <Text color="#1890ff" span>Your free trial ends in {trialDaysLeft} day{trialDaysLeft === 1 ? '' : 's'}</Text>
-                </Title>
-                <Text color="#1890ff" mb="sm">
-                  To avoid interruption, please upgrade to a paid plan below.
-                </Text>
-                <Group>
-                  <Button color="blue" variant="filled" component="a" href="https://buy.stripe.com/test_8wM8yQ7wA7gQeRa6oo" target="_blank">
-                    Upgrade to Pro
-                  </Button>
-                  <Button color="gray" variant="outline" component="a" href="https://buy.stripe.com/test_3cs7vQ7wA7gQeRa7op" target="_blank">
-                    Choose Basic Plan
-                  </Button>
-                </Group>
-              </Paper>
+              <div style={{ background: "#e6f7ff", border: "1px solid #91d5ff", borderRadius: 16, padding: 16, marginBottom: 16 }}>
+                <div style={{ color: "#1890ff", fontWeight: 700, fontSize: "1.1rem" }}>Your free trial ends in {trialDaysLeft} day{trialDaysLeft === 1 ? '' : 's'}</div>
+                <div style={{ color: "#1890ff", marginBottom: 8 }}>To avoid interruption, please upgrade to a paid plan below.</div>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <a href="https://buy.stripe.com/test_8wM8yQ7wA7gQeRa6oo" target="_blank" rel="noopener noreferrer" className={styles["dashboard-button"]} style={{ background: "#6366f1" }}>Upgrade to Pro</a>
+                  <a href="https://buy.stripe.com/test_3cs7vQ7wA7gQeRa7op" target="_blank" rel="noopener noreferrer" className={styles["dashboard-button"]} style={{ background: "#7B5AF7" }}>Choose Basic Plan</a>
+                </div>
+              </div>
             ) : null}
-            <Title order={4}>Manage Services</Title>
-            <Group gap="xs">
-              <TextInput
-                placeholder="Service name"
-                value={newLabel}
-                onChange={(e) => setNewLabel(e.currentTarget.value)}
-                style={{ flex: 2 }}
-              />
-              {/* Hide the key input from the user */}
-              <Select
-                placeholder="Unit"
-                data={unitOptions}
-                value={newUnit}
-                onChange={(val) => setNewUnit(val || "ft²")}
-                style={{ flex: 1 }}
-              />
-              <NumberInput
-                placeholder="Price"
-                value={newBasePrice}
-                onChange={(val) => setNewBasePrice(Number(val) || 0)}
-                min={0}
-                style={{ flex: 1 }}
-                prefix="$"
-              />
-              <Button onClick={handleAddService} loading={loading} disabled={!newLabel.trim()}>
-                Add Service
-              </Button>
-            </Group>
-            <Select
-              label="Services"
-              placeholder="Select a service"
-              data={services.map((s: Service) => ({ value: s.key, label: s.label }))}
-              value={selectedService}
-              onChange={(val) => setSelectedService(val)}
-              clearable
-            />
+            <div className={styles["dashboard-title"]}>Manage Services</div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              <input className={styles["dashboard-input"]} placeholder="Service name" value={newLabel} onChange={e => setNewLabel(e.target.value)} style={{ flex: 2 }} />
+              <select className={styles["dashboard-input"]} value={newUnit} onChange={e => setNewUnit(e.target.value)} style={{ flex: 1 }}>
+                {unitOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+              </select>
+              <input className={styles["dashboard-input"]} type="number" min={0} value={newBasePrice} onChange={e => setNewBasePrice(Number(e.target.value) || 0)} placeholder="Price" style={{ flex: 1 }} />
+              <button className={styles["dashboard-button"]} onClick={handleAddService} disabled={!newLabel.trim() || loading}>Add Service</button>
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <select className={styles["dashboard-input"]} value={selectedService ?? ""} onChange={e => setSelectedService(e.target.value || null)}>
+                <option value="">Select a service</option>
+                {services.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+              </select>
+            </div>
             {selected && (
-              <Paper shadow="xs" p="md">
-                <Group style={{ justifyContent: "space-between" }}>
-                  <Text style={{ fontWeight: 500 }}>{selected.label}</Text>
-                  <Button color="red" size="xs" onClick={() => handleDeleteService(selected.key)}>
-                    Delete
-                  </Button>
-                </Group>
-                <TextInput
-                  label="Label"
-                  value={selected.label}
-                  onChange={(e) =>
-                    handleUpdateService(selected.key, e.currentTarget.value, selected.unit, selected.base_price)
-                  }
-                />
-                {/* Key is only shown as read-only for information, not editable */}
-                <TextInput
-                  label="Key"
-                  value={selected.key}
-                  readOnly
-                  style={{ color: "#888" }}
-                  description="Key is generated automatically and cannot be edited"
-                />
-                <Select
-                  label="Unit"
-                  data={unitOptions}
-                  value={selected.unit}
-                  onChange={(val) =>
-                    handleUpdateService(selected.key, selected.label, val || "ft²", selected.base_price)
-                  }
-                />
-                <NumberInput
-                  label="Price"
-                  value={selected.base_price}
-                  onChange={(val) =>
-                    handleUpdateService(selected.key, selected.label, selected.unit, Number(val) || 0)
-                  }
-                  min={0}
-                  prefix="$"
-                />
-              </Paper>
+              <div className={styles["dashboard-card"]} style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontWeight: 500 }}>{selected.label}</span>
+                  <button className={styles["dashboard-button"]} style={{ background: "#ef4444" }} onClick={() => handleDeleteService(selected.key)}>Delete</button>
+                </div>
+                <label className={styles["dashboard-label"]}>Label</label>
+                <input className={styles["dashboard-input"]} value={selected.label} onChange={e => handleUpdateService(selected.key, e.target.value, selected.unit, selected.base_price)} />
+                <label className={styles["dashboard-label"]}>Key</label>
+                <input className={styles["dashboard-input"]} value={selected.key} readOnly style={{ color: "#888" }} />
+                <label className={styles["dashboard-label"]}>Unit</label>
+                <select className={styles["dashboard-input"]} value={selected.unit} onChange={e => handleUpdateService(selected.key, selected.label, e.target.value, selected.base_price)}>
+                  {unitOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+                <label className={styles["dashboard-label"]}>Price</label>
+                <input className={styles["dashboard-input"]} type="number" min={0} value={selected.base_price} onChange={e => handleUpdateService(selected.key, selected.label, selected.unit, Number(e.target.value) || 0)} />
+              </div>
             )}
             {/* --- Widget Embed Instructions Section --- */}
             {userId && (
-              <Paper shadow="xs" p="md" mb="md" style={{ background: '#f8f9fa' }}>
-                <Title order={5} mb="xs">Widget Embed Instructions</Title>
-                <Text mb="xs">
+              <div className={styles["dashboard-card"]} style={{ background: "#f8f9fa", marginBottom: 16 }}>
+                <div style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: 8 }}>Widget Embed Instructions</div>
+                <div style={{ marginBottom: 8 }}>
                   You can embed the Prestimate measuring tool using either method below. For full platform-specific tutorials, see <a href="https://prestimate.io/how-to-embed" target="_blank" rel="noopener noreferrer">How to Embed</a>.
-                </Text>
-                <Text fw={500} mt="sm">1. Iframe Embed (Recommended)</Text>
-                <Paper withBorder p="sm" style={{ background: '#fff', fontFamily: 'monospace', fontSize: 14, wordBreak: 'break-all', marginBottom: 8 }}>
+                </div>
+                <div style={{ fontWeight: 500, marginTop: 8 }}>1. Iframe Embed (Recommended)</div>
+                <div style={{ background: "#fff", fontFamily: "monospace", fontSize: 14, wordBreak: "break-all", marginBottom: 8, padding: 8, borderRadius: 8 }}>
                   {`<iframe src="https://prestimate-frontend.vercel.app/embed?id=${userId}" width="100%" height="600" style="border:none;"></iframe>`}
-                </Paper>
-                <Button
-                  mt={0}
-                  size="xs"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`<iframe src=\"https://prestimate-frontend.vercel.app/embed?id=${userId}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>`);
-                  }}
-                  variant="outline"
-                  style={{ marginBottom: 12 }}
-                >
-                  Copy Iframe Code
-                </Button>
-                <Text fw={500} mt="sm">2. Script Embed (Advanced/custom use)</Text>
-                <Paper withBorder p="sm" style={{ background: '#fff', fontFamily: 'monospace', fontSize: 14, wordBreak: 'break-all', marginBottom: 8 }}>
+                </div>
+                <button className={styles["dashboard-button"]} style={{ background: "#ece6ff", color: "#7B5AF7", marginBottom: 8 }} onClick={() => navigator.clipboard.writeText(`<iframe src=\"https://prestimate-frontend.vercel.app/embed?id=${userId}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>`)}>Copy Iframe Code</button>
+                <div style={{ fontWeight: 500, marginTop: 8 }}>2. Script Embed (Advanced/custom use)</div>
+                <div style={{ background: "#fff", fontFamily: "monospace", fontSize: 14, wordBreak: "break-all", marginBottom: 8, padding: 8, borderRadius: 8 }}>
                   {`<script src="https://prestimate-frontend.vercel.app/widget.js" data-customer="${userId}"></script>`}
-                </Paper>
-                <Button
-                  mt={0}
-                  size="xs"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`<script src=\"https://prestimate-frontend.vercel.app/widget.js\" data-customer=\"${userId}\"></script>`);
-                  }}
-                  variant="outline"
-                >
-                  Copy Script Code
-                </Button>
-                <Text mt="md" size="sm" color="dimmed">
+                </div>
+                <button className={styles["dashboard-button"]} style={{ background: "#ece6ff", color: "#7B5AF7" }} onClick={() => navigator.clipboard.writeText(`<script src=\"https://prestimate-frontend.vercel.app/widget.js\" data-customer=\"${userId}\"></script>`)}>Copy Script Code</button>
+                <div style={{ marginTop: 12, fontSize: "0.95rem", color: "#888" }}>
                   For step-by-step guides for WordPress, Wix, Squarespace, Shopify, Webflow, GoDaddy, and more, visit <a href="https://prestimate.io/how-to-embed" target="_blank" rel="noopener noreferrer">prestimate.io/how-to-embed</a>.
-                </Text>
-              </Paper>
+                </div>
+              </div>
             )}
-            {error && <Text style={{ color: "red" }}>{error}</Text>}
-          </Stack>
-        </Box>
-      </Group>
-    </>
+            {error && <div style={{ color: "red" }}>{error}</div>}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
