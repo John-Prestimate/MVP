@@ -63,7 +63,8 @@ const ActivateDashboard: React.FC = () => {
         if (settingsRows.length === 0) {
           const settingsPayload = {
             user_id: uid,
-            email
+            email,
+            currency: "USD"
           };
           console.log("Inserting business_settings:", settingsPayload);
           const response = await supabase
