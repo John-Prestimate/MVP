@@ -71,22 +71,7 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
         }
 
 
-        // --- Debug logs before inserting into business_settings ---
-        console.log("Register: inserting business_settings with user_id:", data.user.id);
-        const { data: userData } = await supabase.auth.getUser();
-        console.log("Register: supabase.auth.getUser() returned:", userData);
-
-        // --- Insert into business_settings immediately after upsert_customer ---
-        const { error: settingsError } = await supabase.from('business_settings').insert([{
-          user_id: data.user.id,
-          email: normalizedEmail,
-          currency: "USD",
-          units: "imperial"
-        }]);
-        if (settingsError) {
-          setError("Database error saving business settings: " + settingsError.message);
-          return;
-        }
+  // --- Do not insert into business_settings here; handled after login in Dashboard ---
 
         // --- Send onboarding email automatically ---
         try {

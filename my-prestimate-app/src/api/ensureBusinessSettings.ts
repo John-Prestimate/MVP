@@ -22,11 +22,11 @@ export async function ensureBusinessSettings(userId: string) {
   }
 
   if (!data) {
-    // Row does not exist, try to insert
+    // Row does not exist, try to insert after login (user is authenticated)
     console.log("[ensureBusinessSettings] No row found, inserting for user:", userId);
     const { data: insertData, error: insertError } = await supabase
       .from("business_settings")
-      .insert([{ user_id: userId }])
+      .insert([{ user_id: userId, currency: "USD", units: "imperial" }])
       .select("id")
       .maybeSingle();
 
