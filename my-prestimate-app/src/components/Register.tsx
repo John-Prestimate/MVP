@@ -70,6 +70,18 @@ const Register = ({ onRegistered, onBackToLogin }: RegisterProps) => {
           return;
         }
 
+        // --- Insert into business_settings immediately after upsert_customer ---
+        const { error: settingsError } = await supabase.from('business_settings').insert([{
+          user_id: data.user.id,
+          email: normalizedEmail,
+          currency: "USD",
+          units: "imperial"
+        }]);
+        if (settingsError) {
+          setError("Database error saving business settings: " + settingsError.message);
+          return;
+        }
+
         // --- Send onboarding email automatically ---
         try {
           const embedInstructions = `\n<div id=\"prestimate-widget\"></div>\n<script src=\"https://prestimate.io/widget.js\" data-user=\"${data.user.id}\"></script>\n`;
