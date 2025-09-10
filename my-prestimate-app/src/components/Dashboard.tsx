@@ -40,7 +40,6 @@ const Dashboard = () => {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
-  // Ensure business profile and customer row exist after login
   useEffect(() => {
     async function ensureProfile() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -58,6 +57,33 @@ const Dashboard = () => {
           .eq("user_id", userId)
           .single(); // Only query, do not insert/upsert during sign-up or initial load
       if (fetchError && fetchError.code !== "PGRST116") return;
+  // Ensure business_settings row exists after login, with user-friendly messages
+  const [profileStatus, setProfileStatus] = useState<'checking' | 'ready' | 'error'>('checking');
+  const [profileError, setProfileError] = useState("");
+
+  useEffect(() => {
+    async function ensureProfile() {
+      setProfileStatus('checking');
+      setProfileError("");
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        setProfileStatus('error');
+        setProfileError("You must be logged in to access the dashboard.");
+        return;
+      }
+      try {
+        await ensureBusinessSettings(user.id);
+        setProfileStatus('ready');
+      } catch (err: any) {
+        setProfileStatus('error');
+        setProfileError(err.message || "Failed to set up your business settings.");
+      }
+    }
+    ensureProfile();
+  }, []);
+
+  if (profileStatus === 'checking') return <div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}><span>Loading your business profile...</span></div>;
+  if (profileStatus === 'error') return <div style={{color:'red',textAlign:'center',marginTop:40}}>{profileError}</div>;
       if (!existing) {
         console.log("[Dashboard] Inserting business_settings for user:", userId);
           // ...existing code...
