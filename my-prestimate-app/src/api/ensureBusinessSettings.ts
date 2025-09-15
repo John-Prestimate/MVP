@@ -1,3 +1,5 @@
+// WARNING: Only call this function after user is authenticated and confirmed.
+// Supabase RLS will block unauthenticated or unconfirmed users. Never call before confirmation.
 import { supabase } from "../supabaseClient";
 
 /**
@@ -6,6 +8,10 @@ import { supabase } from "../supabaseClient";
  * Returns true if a new row was created, false if one already existed.
  */
 export async function ensureBusinessSettings(userId: string) {
+  // RUNTIME GUARD: Only allow insert after user is authenticated and email is confirmed
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw userError || new Error('No user logged in');
+  if (!user.email_confirmed_at) throw new Error('Email not confirmed. Cannot insert into business_settings.');
   console.log("[ensureBusinessSettings] Checking for business_settings row for user:", userId);
 
   // Check for existing row

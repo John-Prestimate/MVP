@@ -1,3 +1,5 @@
+// WARNING: Only insert into business_settings after user is fully authenticated and confirmed.
+// Supabase RLS will block unauthenticated or unconfirmed users. Never insert here before confirmation.
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Loader, Paper, Title, Button, Text, Center } from "@mantine/core";
@@ -30,6 +32,10 @@ const ActivateDashboard: React.FC = () => {
           ({ data: userData, error: userError } = await supabase.auth.getUser());
           if (userError || !userData?.user) throw userError || new Error("Authentication failed.");
         }
+        // RUNTIME GUARD: Only allow insert after user is authenticated and email is confirmed
+        if (!userData.user.email_confirmed_at) {
+          throw new Error("Your email is not confirmed. Please confirm your email before activating your account.");
+        }
         const uid = userData.user.id;
         // Check for existing customer
         const { data: customerRows, error: customerError } = await supabase
@@ -61,6 +67,7 @@ const ActivateDashboard: React.FC = () => {
           .eq("user_id", uid);
         if (settingsError) throw settingsError;
         if (settingsRows.length === 0) {
+          // Supabase RLS: Only insert into business_settings after user is authenticated and email is confirmed
           const settingsPayload = {
             user_id: uid,
             email,

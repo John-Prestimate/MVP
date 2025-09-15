@@ -1,3 +1,6 @@
+// WARNING: All functions in this file require a valid authenticated user/session.
+// Never call from the client before login or before email confirmation.
+// Supabase RLS will block unauthenticated inserts/updates.
 // Supabase service API for dashboard and mapview integration
 import { supabase } from "../supabaseClient";
 
@@ -14,6 +17,10 @@ const DEFAULT_SERVICES = [
  * If no row exists or if the array is empty, the row is initialized with default services.
  */
 export async function fetchServices(userId: string) {
+  // RUNTIME GUARD: Only allow insert after user is authenticated and email is confirmed
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw userError || new Error('No user logged in');
+  if (!user.email_confirmed_at) throw new Error('Email not confirmed. Cannot insert into business_settings.');
   const { data, error } = await supabase
     .from("business_settings")
     .select("service_types, id")
@@ -53,6 +60,10 @@ export async function addService(
   unit: string,
   base_price: number
 ) {
+  // RUNTIME GUARD: Only allow insert after user is authenticated and email is confirmed
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw userError || new Error('No user logged in');
+  if (!user.email_confirmed_at) throw new Error('Email not confirmed. Cannot insert into business_settings.');
   let { data, error } = await supabase
     .from("business_settings")
     .select("service_types, id")

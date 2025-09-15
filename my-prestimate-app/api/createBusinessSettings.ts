@@ -1,3 +1,5 @@
+// WARNING: Only call this function from trusted backend code after user email confirmation.
+// Never call directly from the client or before authentication, or you risk violating onboarding/RLS flow.
 // Supabase Edge Function: createBusinessSettings
 // This function inserts a new row into the business_settings table for a given user (customer_id)
 // It uses the Supabase Service Role Key to bypass RLS and should be called after email confirmation.
