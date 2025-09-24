@@ -52,6 +52,7 @@ const MapView = () => {
 
   useEffect(() => {
     const userId = getUserIdFromUrl();
+    console.log('[MapView] userId from URL:', userId);
     if (!userId) {
       setLoadingCustomer(false);
       return;
@@ -62,6 +63,10 @@ const MapView = () => {
         .select('*')
         .eq('id', userId)
         .single();
+      console.log('[MapView] fetched customer:', data);
+      if (data) {
+        console.log('[MapView] subscription_active:', data.subscription_active);
+      }
       setCustomer(data);
       setLoadingCustomer(false);
     }
