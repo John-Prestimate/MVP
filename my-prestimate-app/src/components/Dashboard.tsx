@@ -112,6 +112,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
+  const [customerId, setCustomerId] = useState<string | null>(null);
   // --- Subscription status logic ---
   const [customer, setCustomer] = useState<any>(null);
   const [loadingCustomer, setLoadingCustomer] = useState(true);
@@ -149,15 +150,22 @@ const Dashboard = () => {
   // Load company info and logo
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
-      const id = data?.user?.id ?? null;
-      setUserId(id);
-      if (id) {
-        await ensureBusinessSettings(id);
+      const authId = data?.user?.id ?? null;
+      setUserId(authId);
+      if (authId) {
+        // Fetch customer row to get the customers.id
+        const { data: customerRow } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('auth_id', authId)
+          .single();
+        setCustomerId(customerRow?.id ?? null);
+        await ensureBusinessSettings(authId);
         // Fetch company info
         const { data: settings, error: settingsError } = await supabase
           .from('business_settings')
           .select('company_name, address, phone, email, industry, logo_url')
-          .eq('user_id', id)
+          .eq('user_id', authId)
           .single();
         if (!settingsError && settings) {
           setCompanyName(settings.company_name || "");
@@ -412,7 +420,7 @@ const Dashboard = () => {
               </div>
             )}
             {/* --- Widget Embed Instructions Section --- */}
-            {userId && (
+            {customerId && (
               <div className={styles["dashboard-card"]} style={{ background: "#f8f9fa", marginBottom: 16 }}>
                 <div style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: 8 }}>Widget Embed Instructions</div>
                 <div style={{ marginBottom: 8 }}>
@@ -420,14 +428,14 @@ const Dashboard = () => {
                 </div>
                 <div style={{ fontWeight: 500, marginTop: 8 }}>Direct Map Tool Link</div>
                 <div style={{ background: "#fff", fontFamily: "monospace", fontSize: 14, wordBreak: "break-all", marginBottom: 8, padding: 8, borderRadius: 8 }}>
-                  <a href={`https://my-prestimate-app.vercel.app/?user=${userId}`} target="_blank" rel="noopener noreferrer">https://my-prestimate-app.vercel.app/?user={userId}</a>
+                  <a href={`https://my-prestimate-app.vercel.app/?user=${customerId}`} target="_blank" rel="noopener noreferrer">https://my-prestimate-app.vercel.app/?user={customerId}</a>
                 </div>
-                <button className={styles["dashboard-button"]} style={{ background: "#ece6ff", color: "#7B5AF7", marginBottom: 8 }} onClick={() => navigator.clipboard.writeText(`https://my-prestimate-app.vercel.app/?user=${userId}`)}>Copy Map Tool Link</button>
+                <button className={styles["dashboard-button"]} style={{ background: "#ece6ff", color: "#7B5AF7", marginBottom: 8 }} onClick={() => navigator.clipboard.writeText(`https://my-prestimate-app.vercel.app/?user=${customerId}`)}>Copy Map Tool Link</button>
                 <div style={{ fontWeight: 500, marginTop: 8 }}>1. Iframe Embed (Recommended)</div>
                 <div style={{ background: "#fff", fontFamily: "monospace", fontSize: 14, wordBreak: "break-all", marginBottom: 8, padding: 8, borderRadius: 8 }}>
-                  {`<iframe src="https://prestimate-frontend.vercel.app/embed?user=${userId}" width="100%" height="600" style="border:none;"></iframe>`}
+                  {`<iframe src="https://prestimate-frontend.vercel.app/embed?user=${customerId}" width="100%" height="600" style="border:none;"></iframe>`}
                 </div>
-                <button className={styles["dashboard-button"]} style={{ background: "#ece6ff", color: "#7B5AF7", marginBottom: 8 }} onClick={() => navigator.clipboard.writeText(`<iframe src=\"https://prestimate-frontend.vercel.app/embed?user=${userId}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>`)}>Copy Iframe Code</button>
+                <button className={styles["dashboard-button"]} style={{ background: "#ece6ff", color: "#7B5AF7", marginBottom: 8 }} onClick={() => navigator.clipboard.writeText(`<iframe src=\"https://prestimate-frontend.vercel.app/embed?user=${customerId}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>`)}>Copy Iframe Code</button>
                 <div style={{ fontWeight: 500, marginTop: 8 }}>2. Script Embed (Advanced/custom use)</div>
                 <div style={{ background: "#fff", fontFamily: "monospace", fontSize: 14, wordBreak: "break-all", marginBottom: 8, padding: 8, borderRadius: 8 }}>
                   {`<script src="https://prestimate-frontend.vercel.app/widget.js" data-customer="${userId}"></script>`}
