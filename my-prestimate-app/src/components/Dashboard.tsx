@@ -425,9 +425,9 @@ const Dashboard = () => {
                 <button className={styles["dashboard-button"]} style={{ background: "#ece6ff", color: "#7B5AF7", marginBottom: 8 }} onClick={() => navigator.clipboard.writeText(`https://my-prestimate-app.vercel.app/?user=${userId}`)}>Copy Map Tool Link</button>
                 <div style={{ fontWeight: 500, marginTop: 8 }}>1. Iframe Embed (Recommended)</div>
                 <div style={{ background: "#fff", fontFamily: "monospace", fontSize: 14, wordBreak: "break-all", marginBottom: 8, padding: 8, borderRadius: 8 }}>
-                  {`<iframe src="https://prestimate-frontend.vercel.app/embed?id=${userId}" width="100%" height="600" style="border:none;"></iframe>`}
+                  {`<iframe src="https://prestimate-frontend.vercel.app/embed?user=${userId}" width="100%" height="600" style="border:none;"></iframe>`}
                 </div>
-                <button className={styles["dashboard-button"]} style={{ background: "#ece6ff", color: "#7B5AF7", marginBottom: 8 }} onClick={() => navigator.clipboard.writeText(`<iframe src=\"https://prestimate-frontend.vercel.app/embed?id=${userId}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>`)}>Copy Iframe Code</button>
+                <button className={styles["dashboard-button"]} style={{ background: "#ece6ff", color: "#7B5AF7", marginBottom: 8 }} onClick={() => navigator.clipboard.writeText(`<iframe src=\"https://prestimate-frontend.vercel.app/embed?user=${userId}\" width=\"100%\" height=\"600\" style=\"border:none;\"></iframe>`)}>Copy Iframe Code</button>
                 <div style={{ fontWeight: 500, marginTop: 8 }}>2. Script Embed (Advanced/custom use)</div>
                 <div style={{ background: "#fff", fontFamily: "monospace", fontSize: 14, wordBreak: "break-all", marginBottom: 8, padding: 8, borderRadius: 8 }}>
                   {`<script src="https://prestimate-frontend.vercel.app/widget.js" data-customer="${userId}"></script>`}
