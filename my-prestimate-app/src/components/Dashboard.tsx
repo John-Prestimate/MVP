@@ -418,6 +418,11 @@ const Dashboard = () => {
                 <div style={{ marginBottom: 8 }}>
                   You can embed the Prestimate measuring tool using either method below. For full platform-specific tutorials, see <a href="https://prestimate.io/how-to-embed" target="_blank" rel="noopener noreferrer">How to Embed</a>.
                 </div>
+                <div style={{ fontWeight: 500, marginTop: 8 }}>Direct Map Tool Link</div>
+                <div style={{ background: "#fff", fontFamily: "monospace", fontSize: 14, wordBreak: "break-all", marginBottom: 8, padding: 8, borderRadius: 8 }}>
+                  <a href={`https://my-prestimate-app.vercel.app/?user=${userId}`} target="_blank" rel="noopener noreferrer">https://my-prestimate-app.vercel.app/?user={userId}</a>
+                </div>
+                <button className={styles["dashboard-button"]} style={{ background: "#ece6ff", color: "#7B5AF7", marginBottom: 8 }} onClick={() => navigator.clipboard.writeText(`https://my-prestimate-app.vercel.app/?user=${userId}`)}>Copy Map Tool Link</button>
                 <div style={{ fontWeight: 500, marginTop: 8 }}>1. Iframe Embed (Recommended)</div>
                 <div style={{ background: "#fff", fontFamily: "monospace", fontSize: 14, wordBreak: "break-all", marginBottom: 8, padding: 8, borderRadius: 8 }}>
                   {`<iframe src="https://prestimate-frontend.vercel.app/embed?id=${userId}" width="100%" height="600" style="border:none;"></iframe>`}
