@@ -53,36 +53,51 @@ const MapView = () => {
   useEffect(() => {
     // [CHANGE 1] Prefer Supabase Auth user id, fallback to URL param, update .eq() accordingly
     async function loadCustomer() {
-      let userId: string | null = null;
-      // Try Supabase Auth user first
+      // [DEBUG] Log window location
+      console.log('[DEBUG] window.location.href:', window.location.href);
+      console.log('[DEBUG] window.location.search:', window.location.search);
+
+      // [DEBUG] Get userId from URL param
+      const userIdFromUrl = getUserIdFromUrl();
+      console.log('[DEBUG] userIdFromUrl:', userIdFromUrl);
+
+      // [DEBUG] Get Supabase Auth user
       const { data: authData } = await supabase.auth.getUser();
-      if (authData?.user?.id) {
-        userId = authData.user.id;
-        console.log('[MapView] userId from Supabase Auth:', userId);
+      console.log('[DEBUG] Supabase Auth user object:', authData?.user);
+      const userIdFromAuth = authData?.user?.id || null;
+      console.log('[DEBUG] userIdFromAuth:', userIdFromAuth);
+
+      let userId: string | null = null;
+      if (userIdFromAuth) {
+        userId = userIdFromAuth;
+        console.log('[DEBUG] Using userId from Supabase Auth:', userId);
         // Query by auth_id
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('customers')
           .select('*')
           .eq('auth_id', userId)
           .single();
+        console.log('[DEBUG] Supabase customer fetch result (by auth_id):', { data, error });
         setCustomer(data);
         setLoadingCustomer(false);
         return;
       }
-      // Fallback: try user id from URL
-      userId = getUserIdFromUrl();
-      console.log('[MapView] userId from URL:', userId);
-      if (!userId) {
+      if (userIdFromUrl) {
+        userId = userIdFromUrl;
+        console.log('[DEBUG] Using userId from URL param:', userId);
+        // Query by id
+        const { data, error } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('id', userId)
+          .single();
+        console.log('[DEBUG] Supabase customer fetch result (by id):', { data, error });
+        setCustomer(data);
         setLoadingCustomer(false);
         return;
       }
-      // Query by id
-      const { data } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      setCustomer(data);
+      // [DEBUG] No userId found
+      console.log('[DEBUG] No userId found from Auth or URL. Skipping customer fetch.');
       setLoadingCustomer(false);
     }
     loadCustomer();
