@@ -51,26 +51,41 @@ const MapView = () => {
   const [loadingCustomer, setLoadingCustomer] = useState(true);
 
   useEffect(() => {
-    const userId = getUserIdFromUrl();
-    console.log('[MapView] userId from URL:', userId);
-    if (!userId) {
-      setLoadingCustomer(false);
-      return;
-    }
-    async function fetchCustomer() {
+    // [CHANGE 1] Prefer Supabase Auth user id, fallback to URL param, update .eq() accordingly
+    async function loadCustomer() {
+      let userId: string | null = null;
+      // Try Supabase Auth user first
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData?.user?.id) {
+        userId = authData.user.id;
+        console.log('[MapView] userId from Supabase Auth:', userId);
+        // Query by auth_id
+        const { data } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('auth_id', userId)
+          .single();
+        setCustomer(data);
+        setLoadingCustomer(false);
+        return;
+      }
+      // Fallback: try user id from URL
+      userId = getUserIdFromUrl();
+      console.log('[MapView] userId from URL:', userId);
+      if (!userId) {
+        setLoadingCustomer(false);
+        return;
+      }
+      // Query by id
       const { data } = await supabase
         .from('customers')
         .select('*')
         .eq('id', userId)
         .single();
-      console.log('[MapView] fetched customer:', data);
-      if (data) {
-        console.log('[MapView] subscription_active:', data.subscription_active);
-      }
       setCustomer(data);
       setLoadingCustomer(false);
     }
-    fetchCustomer();
+    loadCustomer();
   }, []);
 
   // --- Dynamic services loading ---
@@ -191,7 +206,7 @@ const MapView = () => {
       map.updateSize();
       // Log again after update
       console.log('After map.updateSize, container size:', container.offsetWidth, container.offsetHeight);
-    }, 100);
+    }, 0); // [CHANGE 4] Use 0ms delay
     const markerSource = new VectorSource();
     const markerLayer = new VectorLayer({
       source: markerSource,
@@ -353,12 +368,12 @@ const MapView = () => {
 
   // Returns true if the user is Pro
   function isPro() {
-    return customer && customer.subscription_tier === 'Pro';
+    return customer && typeof customer.subscription_tier === 'string' && customer.subscription_tier.toLowerCase() === 'pro';
   }
 
   // Returns true if the user is Basic
   function isBasic() {
-    return customer && customer.subscription_tier === 'Basic';
+    return customer && typeof customer.subscription_tier === 'string' && customer.subscription_tier.toLowerCase() === 'basic';
   }
 
   // --- Feature Gating ---
@@ -530,6 +545,8 @@ const MapView = () => {
           touchAction: 'none',
           height: '100vh', // Ensures the map is visible
           border: '2px solid red', // Debug: visually see the map container
+          minWidth: 200, // [CHANGE 3] Ensure nonzero size
+          minHeight: 200, // [CHANGE 3] Ensure nonzero size
         }}
       />
       {/* Menu panel (collapsed by default) */}
