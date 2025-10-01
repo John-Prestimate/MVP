@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+// [FIX 3] Use useLocation from react-router-dom for query params
+import { useLocation } from "react-router-dom";
 import 'ol/ol.css';
 import Map from 'ol/Map';
 import View from 'ol/View';
@@ -30,9 +32,9 @@ const DEFAULT_SERVICE_TYPES = [
   { key: 'patio', label: 'Patio Wash', unit: 'ft²', base_price: 0.20 },
 ];
 
-// Helper to get user ID from URL
-function getUserIdFromUrl() {
-  const params = new URLSearchParams(window.location.search);
+// [FIX 3] Helper to get user ID from query params using useLocation
+function getUserIdFromUrl(locationSearch: string) {
+  const params = new URLSearchParams(locationSearch);
   return params.get('user');
 }
 
@@ -50,15 +52,15 @@ const MapView = () => {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loadingCustomer, setLoadingCustomer] = useState(true);
 
+  const location = useLocation(); // [FIX 3] Get location object
   useEffect(() => {
     // [CHANGE 1] Prefer Supabase Auth user id, fallback to URL param, update .eq() accordingly
     async function loadCustomer() {
-      // [DEBUG] Log window location
-      console.log('[DEBUG] window.location.href:', window.location.href);
-      console.log('[DEBUG] window.location.search:', window.location.search);
+      // [DEBUG] Log location.search from useLocation
+      console.log('[DEBUG] location.search:', location.search);
 
-      // [DEBUG] Get userId from URL param
-      const userIdFromUrl = getUserIdFromUrl();
+      // [DEBUG] Get userId from query params using useLocation
+      const userIdFromUrl = getUserIdFromUrl(location.search);
       console.log('[DEBUG] userIdFromUrl:', userIdFromUrl);
 
       // [DEBUG] Get Supabase Auth user
@@ -101,7 +103,7 @@ const MapView = () => {
       setLoadingCustomer(false);
     }
     loadCustomer();
-  }, []);
+  }, [location.search]); // [FIX 3] Depend on location.search
 
   // --- Dynamic services loading ---
   const [serviceTypes, setServiceTypes] = useState<any[]>([]);
